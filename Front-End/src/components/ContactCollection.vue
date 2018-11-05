@@ -5,7 +5,7 @@
             <mu-text-field v-model="formData.phone" prop="phone"></mu-text-field>
         </mu-form-item>
         <mu-form-item>
-            <mu-button color="primary" @click="submitData" data-mu-loading-size="24" class="button" :disabled="isClick" :v-loading="isClick">Submit</mu-button>
+            <mu-button color="primary" @click="submitData" data-mu-loading-size="24" class="button" :disabled="isClick" v-loading="isClick">Submit</mu-button>
             <mu-button @click="cancelInput" class="button">Cancel</mu-button>
         </mu-form-item>
     </mu-form>
@@ -20,6 +20,7 @@
 </template>
 
 <script> 
+import wx from 'weixin-jsapi';
 
 export default {
     data () {
@@ -70,7 +71,9 @@ export default {
                                 thiz.isClick = false;
                                 thiz.isQuery = false;
                                 console.log(res)
-                                if (res.data.d.results.length > 0) {
+                                if(res.data.isCreated) {
+                                    thiz.$toast.success('Success');
+                                } else if (res.data.d.results.length > 0) {
                                     thiz.$toast.success('Success');
                                     thiz.contactList = res.data.d.results.concat();
                                 } else {
@@ -109,11 +112,8 @@ export default {
 @import 'https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css';
 
 .mainBody {
-    height: 300px;
-}
-.btn {
-    height:100px;
-    width: 200px;
+    height:100%;
+    margin: 50px 10px;
 }
 
 .radio {
@@ -122,7 +122,7 @@ export default {
 }
 
 .button {
-    margin: 1.25rem 2.5rem;
+    margin: 1.25rem 2.5rem !important;
 }
 
 </style>

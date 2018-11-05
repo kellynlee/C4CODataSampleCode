@@ -3,7 +3,8 @@ const HOST = isPrd ? 'https://c4codatasample.cfapps.us10.hana.ondemand.com' : 'h
 const URL = {
     createTicket: HOST + '/createTicket',
     createBP: HOST + '/createBP',
-    getContactCollection: HOST + '/getContactCollection'
+    getContactCollection: HOST + '/getContactCollection',
+    wxConfig: HOST + '/wxJssdk/getJssdk'
 }
 
 module.exports = {

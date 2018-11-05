@@ -24,6 +24,8 @@ const parser = new xml2js.Parser();
 const store = require('./store/tokenStore');
 const getWxUserInfo = require('./modules/wxHandler/getWxUserInfo');
 const getWxJSSDKToken = require('./modules/getWeChatJSSDkToken');
+const crypto = require('crypto');
+
 app.use(history({
   htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
 }))
@@ -54,14 +56,6 @@ app.all('*',function (req, res, next) {
 app.get('/wx/c4c',(req, res) => {
   if(req.query.signature) {
     console.log('enter');
-    // wx.config({
-    //   debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-    //   appId: configData.WeChat.appID, // 必填，公众号的唯一标识
-    //   timestamp: req.query.timestamp, // 必填，生成签名的时间戳
-    //   nonceStr: req.query.nonce, // 必填，生成签名的随机串
-    //   signature: req.query.signature,// 必填，签名，见附录1
-    //   jsApiList: [] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
-    //   });
     wxValidate.signatureValidate(req.query.signature, req.query.timestamp, req.query.nonce).then((data) => {
       console.log(data)
       if (data) {
@@ -77,14 +71,15 @@ app.post('/wxJssdk/getJssdk', (req, res) => {
   getWxToken(configData.WeChat.appID, configData.WeChat.appSecret).then((data) => {
     getWxJSSDKToken(data.access_token).then((data) => {
       let jsapi_ticket = data.token;
-      let nonce_str = '123456'  // 密钥，字符串任意，可以随机生成
-      let timestamp = new Date().getTime() // 时间戳
+      let nonce_str = '123456';
+      let timestamp = new Date().getTime();
       let url = req.query.url;
       let str = 'jsapi_ticket=' + jsapi_ticket + '&noncestr=' + nonce_str + '×tamp=' + timestamp + '&url=' + url
-      let signature = sha1(str)
+      let sha1Code = crypto.createHash("sha1");
+      let signature = sha1Code.update(str).digest('hex');
       res.send({
-        appId: appid,
-        timestamp: timpstamp,
+        appId: configData.WeChat.appID,
+        timestamp: timestamp,
         nonceStr: nonce_str,
         signature: signature,
       })
@@ -159,12 +154,16 @@ app.post('/getContactCollection',(req, res) => {
   console.log(options);
   rp(options).then((data) => {
     console.log('success')
-    if (data.data.d.results.length == 1) {
+    let result = JSON.parse(data);
+    let contact = result.d.results;
+    if (contact.length == 1) {
+      let ObjectID = contact[0].ObjectID;
+      let UUID = ObjectID.slice(0,8) +"-"+ ObjectID.slice(8,12) + "-"+ ObjectID.slice(12,16) + "-" + ObjectID.slice(16,20) + "-" + ObjectID.slice(20,ObjectID.length);
       let  body = {
         ParentObjectID: store.SocialMediaUserProfileNodeID,
         BusinessPartnerCategoryCode:"1",
         BusinessPartnerRoleCode:"BUP001",
-        BusinessPartnerUUID:req.body.UUID
+        BusinessPartnerUUID:UUID
       };
       let options = getOption('POST', body, configData.apiList.BP, true);
       getToken().then((data) => {
@@ -172,14 +171,15 @@ app.post('/getContactCollection',(req, res) => {
         options.json = true;
         rp(options).then((data) => {
           console.log(data);
-          res.status(200)
+          data.isCreated = true;
+          res.status(200);
           res.send(data);
         }).catch((err) => {
           res.status(400);
           res.send(err);
         });
       }).catch((err) => {
-        res.send(400);
+        res.status(400);
         res.send(err);
       });
     } else {
@@ -249,17 +249,36 @@ app.post('/createTicket', (req, res) => {
       options.json = true;
       console.log('start creating')
       rp(options).then((data) => {
-        console.log(data.d.results[0]);
+        // console.log(data.d.results[0]);
         if (data.d.results[0]) {
           // res.send(data.d.results[0]);
+          updateTicket(data.d.results[0].ParentObjectID, req.body, result[0])
           let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
-          console.log(options);
+          // console.log(options);
           options.json = true;
           rp(options).then((data) => {
-            console.log(data);
+            // console.log(data);
             res.send(data);
+            let id = data.d.results.ID;
+            rp({
+              method: 'post',
+              uri: 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=' + store.wxToken.access_token,
+              body: {
+                touser: store.openID,
+                template_id: 'WmzCQaFtQrFW5QMVGRJld6IrvTpjRBDyEORXDdgYaFo',
+                url: 'http://weixin.qq.com/download',
+                data: {
+                  ID: {
+                    value: id,
+                    color: '#173177'
+                  }
+                }
+              },
+              json: true
+            }).then((data) => {
+              console.log(data)
+            })
           })
-          updateTicket(data.d.results[0].ParentObjectID, req.body, result[0])
         }
       }).catch((err) => {
         console.log(err)

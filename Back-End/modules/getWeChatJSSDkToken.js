@@ -1,7 +1,7 @@
 const rp = require('request-promise');
 const tokenStore = require('../store/tokenStore');
 
-const getToken = function (appID, appSecret) {
+const getToken = function (access_token) {
   return new Promise ((res, req) => {
     rp.get('https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=' + access_token + '&type=jsapi').then((data) => {
       res(JSON.parse(data));

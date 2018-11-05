@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="mainContent">
         <mu-form :model="form">
             <mu-form-item label="*Title" prop="title" :rules="validateRules">
                 <mu-text-field v-model="form.title"></mu-text-field>
@@ -25,7 +25,10 @@
 </template>
 
 <script>
-export default{
+import wx from 'weixin-jsapi';
+import { isPrimitive } from 'util';
+
+export default {
     data () {
         return {
             form: {
@@ -36,7 +39,7 @@ export default{
                 date:''
             },
             Submit: 'Submit',
-            isSubmit: true,
+            isSubmit: false,
             validateRules: [
                 { validate: (val) => !!val, message: 'Please input Title' }
             ]
@@ -45,6 +48,7 @@ export default{
     methods: {
         submitTicket: function() {
             let thiz = this;
+            let isPrd =  Object.is(process.env.NODE_ENV, 'production');
             if (!this.form.title) {
                 this.$alert()
             } else {
@@ -65,10 +69,13 @@ export default{
                     // loading.close();
                     if(res.status == 200) {
                         // thiz.Submit = 'Submit';
+                        thiz.isSubmit = false;
                         thiz.$toast.success('Create Successfully');
-                        thiz.$alert('Create Successfully! TicketID:'+res.data.d.results.ID, 'Info', {
-                            okLabel: 'OK'
-                        })
+                        if (isPrd) {
+                            wx.ready(() => {
+                                wx.closeWindow();
+                            })
+                        }
                     }
                 })
             }
@@ -82,13 +89,32 @@ export default{
                 date:''
             }
         }
+    },
+    mounted: function () {
+        this.$axios({
+            method: 'post',
+            url: this.CONFIG.url.wxConfig
+        }).then((data) => {
+            console.log(wx);
+            wx.config({
+                debug: true,
+                appId: data.appId,
+                timestamp: data.timestamp,
+                nonceStr: data.nonceStr,
+                signature: data.signature,
+                jsApiList: ['closeWindow']
+            })
+        })
     }
 }
 
 </script>
 
 <style>
+.mainContent {
+    margin: 50px 10px;
+}
 .button {
-    margin: 1.25rem 2.5rem;
+    margin: 1.25rem 2.5rem !important;
 }
 </style>

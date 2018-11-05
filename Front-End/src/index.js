@@ -5,6 +5,7 @@ import axios from 'axios';
 import MuseUI from 'muse-ui';
 import 'muse-ui/dist/muse-ui.css';
 import Loading from 'muse-ui-loading';
+import 'muse-ui-loading/dist/muse-ui-loading.css';
 import Toast from 'muse-ui-toast';
 import Message from 'muse-ui-message';
 import configData from '../config/api.config';
