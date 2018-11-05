@@ -1,0 +1,7 @@
+---
+applications:
+- name: C4CODataSample
+  memory: 2048M
+  instances: 1
+  random-route: false
+  host: C4CODataSample
