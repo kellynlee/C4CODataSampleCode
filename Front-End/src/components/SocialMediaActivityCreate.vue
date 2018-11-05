@@ -93,15 +93,18 @@ export default {
     mounted: function () {
         this.$axios({
             method: 'post',
-            url: this.CONFIG.url.wxConfig
+            url: this.CONFIG.url.wxConfig,
+            data: {
+                url: location.href.split('#')[0]
+            }
         }).then((data) => {
-            console.log(wx);
+            console.log(data.data);
             wx.config({
                 debug: true,
-                appId: data.appId,
-                timestamp: data.timestamp,
-                nonceStr: data.nonceStr,
-                signature: data.signature,
+                appId: data.data.appId,
+                timestamp: data.data.timestamp,
+                nonceStr: data.data.nonceStr,
+                signature: data.data.signature,
                 jsApiList: ['closeWindow']
             })
         })
@@ -114,7 +117,5 @@ export default {
 .mainContent {
     margin: 50px 10px;
 }
-.button {
-    margin: 1.25rem 2.5rem !important;
-}
+
 </style>

@@ -121,8 +121,5 @@ export default {
     margin-bottom: 0.625rem;
 }
 
-.button {
-    margin: 1.25rem 2.5rem !important;
-}
 
 </style>

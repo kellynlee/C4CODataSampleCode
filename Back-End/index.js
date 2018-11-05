@@ -73,10 +73,13 @@ app.post('/wxJssdk/getJssdk', (req, res) => {
       let jsapi_ticket = data.token;
       let nonce_str = '123456';
       let timestamp = new Date().getTime();
-      let url = req.query.url;
-      let str = 'jsapi_ticket=' + jsapi_ticket + '&noncestr=' + nonce_str + '×tamp=' + timestamp + '&url=' + url
+      let url = req.body.url;
+      let str = 'jsapi_ticket=' + jsapi_ticket + '&noncestr=' + nonce_str + '&timestamp=' + timestamp + '&url=' + url
       let sha1Code = crypto.createHash("sha1");
       let signature = sha1Code.update(str).digest('hex');
+      console.log(req.body.url)
+      console.log(configData.WeChat.appID);
+      console.log(signature);
       res.send({
         appId: configData.WeChat.appID,
         timestamp: timestamp,
