@@ -113,7 +113,7 @@ export default {
 
 .mainBody {
     height:100%;
-    margin: 50px 10px;
+    margin: 50px 20px;
 }
 
 .radio {

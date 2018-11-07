@@ -4,7 +4,8 @@ const URL = {
     createTicket: HOST + '/createTicket',
     createBP: HOST + '/createBP',
     getContactCollection: HOST + '/getContactCollection',
-    wxConfig: HOST + '/wxJssdk/getJssdk'
+    wxConfig: HOST + '/wxJssdk/getJssdk',
+    getTicket: HOST + '/getTicket'
 }
 
 module.exports = {

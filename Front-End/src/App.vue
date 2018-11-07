@@ -36,9 +36,7 @@ body {
   /* background-color: black; */
   width: 100%
 }
-.content {
-  padding: 0 10px;
-}
+
 .footer {
   height: 30px;
   /* background: black; */

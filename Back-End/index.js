@@ -39,11 +39,9 @@ app.use(express.static(path.join(__dirname, 'views')));
 app.engine('html',ejs.__express);
 app.set('view engine', 'html');
 
-getWxToken(configData.WeChat.appID, configData.WeChat.appSecret).then((data) => {
-  createMenu(data.access_token);
-});
-
-
+// getWxToken(configData.WeChat.appID, configData.WeChat.appSecret).then((data) => {
+//   createMenu(data.access_token);
+// });
 
 
 app.all('*',function (req, res, next) {
@@ -154,7 +152,7 @@ app.post('/getContactCollection',(req, res) => {
   console.log(req.body);
   let queryParam =configData.apiList.Contact + "?$format=json&$filter=Phone eq \'*" + req.body.phone + "*\'";
   let options = getOption('GET', '', queryParam, true);
-  console.log(options);
+  // console.log(options);
   rp(options).then((data) => {
     console.log('success')
     let result = JSON.parse(data);
@@ -298,6 +296,28 @@ app.post('/createTicket', (req, res) => {
     res.status(400);
     res.send();
   })
+});
+
+app.post('/getTicket',(req, res) => {
+  if (req.body.ID) {
+    let queryParam = configData.apiList.ServiceRequest + "?$format=json&$filter=ID eq \'" + req.body.ID + "\'";
+    let options = getOption('GET', '', queryParam, false);
+    rp(options).then((data) => {
+      console.log(JSON.parse(data));
+      let result = JSON.parse(data);
+      let ticketDetail = result.d.results[0];
+      let nodeID = ticketDetail.ObjectID;
+      let queryParam = configData.apiList.ServiceRequestLocation + "?$filter=ParentObjectID eq \'" + nodeID + "\'&$expand=ServiceRequestServicePointLocationAddress";
+      let options = getOption('GET', '', queryParam, false);
+      options.json = true;
+      rp(options).then((data) => {
+        if (data.d.results[0].ServiceRequestServicePointLocationAddress) {
+          ticketDetail.ServiceRequestLocation = data.d.results[0].ServiceRequestServicePointLocationAddress;
+        }
+        res.send(ticketDetail)
+      })
+    })
+  }
 })
 
 

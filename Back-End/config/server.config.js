@@ -9,7 +9,8 @@ const apiList = {
     BP: 'SocialMediaUserProfileBupaReferenceCollection',
     getSMUP: 'GetSocialMediaUserProfile',
     ServiceRequestBusinessTransactionDocumentReference: 'ServiceRequestBusinessTransactionDocumentReferenceCollection',
-    ServiceRequest: 'ServiceRequestCollection'
+    ServiceRequest: 'ServiceRequestCollection',
+    ServiceRequestLocation: 'ServiceRequestServicePointLocationCollection'
 };
 const authorization = {
     Username: "Administration01",
