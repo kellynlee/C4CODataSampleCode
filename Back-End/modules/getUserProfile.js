@@ -5,6 +5,7 @@ module.exports = function(openID, param, requireData) {
     const rp = require('request-promise');
     let options = getOption('GET', '', queryParam, true);
     options.json = true;
+    console.log('start')
     return new Promise((res, rej) => {
         rp(options).then((data) => {
             if (data.d.results[0]) {

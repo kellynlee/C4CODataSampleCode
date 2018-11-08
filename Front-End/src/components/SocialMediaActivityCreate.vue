@@ -59,6 +59,7 @@ export default {
                     url: this.CONFIG.url.createTicket,
                     data: {
                         Name: this.form.title,
+                        Description: this.form.description,
                         SerialID: this.form.serialID,
                         ServicePriorityCode: this.form.priority,
                         OnSiteArrivalDateTime: this.form.date
@@ -113,7 +114,7 @@ export default {
 
 </script>
 
-<style>
+<style scoped>
 .mainContent {
     margin: 50px 20px;
 }

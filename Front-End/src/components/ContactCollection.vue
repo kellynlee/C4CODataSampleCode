@@ -107,10 +107,8 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 /* @import '//fonts.useso.com/css?family=Roboto:300,400,500,700,400italic'; */
-@import 'https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css';
-
 .mainBody {
     height:100%;
     margin: 50px 20px;

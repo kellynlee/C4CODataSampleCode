@@ -13,7 +13,7 @@
                 <mu-list>
                     <mu-list-item>
                         <mu-list-item-content>Subject</mu-list-item-content>
-                        <mu-list-item-content>{{ticket.Subject}}</mu-list-item-content>
+                        <mu-list-item-content>{{ticket.Name}}</mu-list-item-content>
                     </mu-list-item>
                 </mu-list>
             </mu-flex>
@@ -21,8 +21,8 @@
                 <mu-list>
                     <mu-list-item>
                         <mu-list-item-content>
-                            <mu-badge :content="ticket.Status" color="primary" class="ticketBadge"></mu-badge>
-                            <mu-badge :content="ticket.Channel"></mu-badge>
+                            <mu-badge :content="ticket.ServiceRequestUserLifeCycleStatusCodeText" color="primary" class="ticketBadge"></mu-badge>
+                            <!-- <mu-badge :content="ticket.Channel"></mu-badge> -->
                         </mu-list-item-content>
                     </mu-list-item>
                 </mu-list>
@@ -46,7 +46,7 @@
     }
 </script>
 
-<style>
+<style scoped>
 .item {
     height: 100px;
     width: 100%;

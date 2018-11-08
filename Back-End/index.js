@@ -39,9 +39,9 @@ app.use(express.static(path.join(__dirname, 'views')));
 app.engine('html',ejs.__express);
 app.set('view engine', 'html');
 
-// getWxToken(configData.WeChat.appID, configData.WeChat.appSecret).then((data) => {
-//   createMenu(data.access_token);
-// });
+getWxToken(configData.WeChat.appID, configData.WeChat.appSecret).then((data) => {
+  createMenu(data.access_token);
+});
 
 
 app.all('*',function (req, res, next) {
@@ -102,8 +102,8 @@ app.post('/wx/c4c', (req, res) => {
               let event = body.Event[0];
               if (event === "subscribe") {
                 console.log(body.FromUserName[0]);
-                thiz.openID = body.FromUserName[0];
-                getWxUserInfo(thiz.openID).then((data) => {
+                // thiz.openID = body.FromUserName[0];
+                getWxUserInfo(body.FromUserName[0]).then((data) => {
                   console.log('got userinfo')
                   let userInfo = data;
                   let body = {
@@ -118,6 +118,7 @@ app.post('/wx/c4c', (req, res) => {
                   let options = getOption('POST', body, configData.apiList.SMUP, true);
                   getUserProfile(userInfo.openid,'SocialMediaUserAccountID', 'ObjectID').then((data) => {
                     if (!data) {
+                      console.log('create new')
                       getToken().then((data) => {
                         console.log('gotToken')
                         options.headers['x-csrf-token'] = data;
@@ -131,6 +132,7 @@ app.post('/wx/c4c', (req, res) => {
                         console.log('err1')
                       })
                     } else {
+                      console.log('created')
                       store.SocialMediaUserProfileNodeID = data;
                       store.openID = userInfo.openid;
                       console.log('success');
@@ -231,7 +233,7 @@ app.post('/createTicket', (req, res) => {
     "SocialMediaMessageID":"20181011",
     "InitiatorCode":"2",
     "SocialMediaUserProfileUUID":"",
-    "Text": req.body.title,
+    "Text": req.body.Description,
     "SocialMediaActivityProviderID":"C4C_WECHAT"
   };
   let options = getOption('POST', body, configData.apiList.SMA, true);
@@ -253,6 +255,7 @@ app.post('/createTicket', (req, res) => {
         // console.log(data.d.results[0]);
         if (data.d.results[0]) {
           // res.send(data.d.results[0]);
+          delete req.body.Description;
           updateTicket(data.d.results[0].ParentObjectID, req.body, result[0])
           let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
           // console.log(options);
@@ -295,6 +298,26 @@ app.post('/createTicket', (req, res) => {
     // console.log(err)
     res.status(400);
     res.send();
+  })
+});
+
+app.post('/getTicketList', (req, res) => {
+  console.log('enter')
+  let key = req.body.key;
+  getUserProfile(store.openID,'SocialMediaUserAccountID', 'AccountInternalID').then((data) => {
+    console.log(key)
+    if(data) {
+      let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
+      let InternalID = data.replace(reg, "$2");
+      let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$format=json&$orderby=ServiceRequestUserLifeCycleStatusCode desc&$top=10&$skip=" + key;
+      let options = getOption('GET', '', queryParam, false);
+      rp(options).then((data) => {
+        let result = JSON.parse(data)
+        let list = result.d.results;
+        console.log(list)
+        res.send(list)
+      })
+    }
   })
 });
 
