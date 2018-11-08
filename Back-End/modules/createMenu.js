@@ -14,8 +14,18 @@ module.exports =  function (access_token) {
             },
             {
               "name":"Ticket",
-              "type":"view",
-              "url":wxConfig.webAuth(serverConfig.host + "/SocialMediaActivityCreate")
+              "sub_button":[
+                {
+                  "type":"view",
+                  "name":"Create Ticket",
+                  "url":wxConfig.webAuth(serverConfig.host + "/SocialMediaActivityCreate")
+                },
+                {
+                  "type":"view",
+                  "name":"Check List",
+                  "url":wxConfig.webAuth(serverConfig.host + "/TicketList")
+                }
+              ]
             }
           ]
         },

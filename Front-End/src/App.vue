@@ -16,6 +16,8 @@ export default {
 </script>
 
 <style>
+@import 'https://cdn.bootcss.com/material-design-icons/3.0.1/iconfont/material-icons.css';
+
 html {
   height: 100%;
 }
@@ -29,18 +31,6 @@ body {
 .app {
   height: 100%;
   width: 100%;
-  background: #f5f7f9;
-}
-.header{
-  height:30px;
-  /* background-color: black; */
-  width: 100%
-}
-
-.footer {
-  height: 30px;
-  /* background: black; */
-  width: 100%
 }
 
 </style>
