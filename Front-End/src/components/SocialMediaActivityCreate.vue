@@ -17,7 +17,7 @@
                 <mu-date-input v-model="form.date" type="dateTime"></mu-date-input>
             </mu-form-item>
             <mu-form-item>
-                <mu-button class="button" color="primary" @click="submitTicket" v-loading="isSubmit">{{Submit}}</mu-button>
+                <mu-button class="button" color="primary" @click="submitTicket">{{Submit}}</mu-button>
                 <mu-button class="button" @click="cancelInput">Cancel</mu-button>
             </mu-form-item>
         </mu-form>
@@ -52,9 +52,7 @@ export default {
             if (!this.form.title) {
                 this.$alert()
             } else {
-                this.isSubmit = true;
-                // this.Submit = "Submitting"
-                // const loading = this.$loading();
+                let loading = this.$loading();
                 this.$axios({
                     url: this.CONFIG.url.createTicket,
                     data: {
@@ -67,7 +65,7 @@ export default {
                     method: 'post'
                 }).then((res) => {
                     console.log(res);
-                    // loading.close();
+                    loading.close();
                     if(res.status == 200) {
                         // thiz.Submit = 'Submit';
                         thiz.isSubmit = false;

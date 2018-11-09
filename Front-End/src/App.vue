@@ -28,7 +28,7 @@ body {
   justify-content: center;
   height: 100%;
 }
-.app {
+.app,.content {
   height: 100%;
   width: 100%;
 }

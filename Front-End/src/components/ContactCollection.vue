@@ -13,7 +13,7 @@
         <mu-flex v-for="contact in contactList" :key="contact.id" class="radioContent">
             <mu-radio :value="contact" :label="contact.FirstName" v-model="selectedContact" @change="onSelect" class="radio"></mu-radio>
         </mu-flex>
-        <mu-button v-if="isSelected" color="primary" @click="createBP" v-loading="isClick" class="button">Create</mu-button>
+        <mu-button v-if="isSelected" color="primary" @click="createBP" class="button">Create</mu-button>
         <mu-button v-if="isSelected" class="button" >Cancel</mu-button>
     </mu-paper>
   </div>
@@ -59,7 +59,7 @@ export default {
                 } else {
                     thiz.$confirm('Confirm your information?', 'Confirm').then(({ result }) => {
                         if (result) {
-                            thiz.isClick = true;
+                            let lodaing = this.$loading();
                             thiz.isQuery = true;
                             thiz.$axios({
                                 method: 'post',
@@ -68,8 +68,8 @@ export default {
                                     phone: this.formData.phone
                                 }
                             }).then((res => {
-                                thiz.isClick = false;
                                 thiz.isQuery = false;
+                                loading.close();
                                 console.log(res)
                                 if(res.data.isCreated) {
                                     thiz.$toast.success('Success');
@@ -84,7 +84,6 @@ export default {
                     })
                 }
             })
-        //   console.log(this.$refs.form);
         },
         createBP: function () {
             var thiz = this;

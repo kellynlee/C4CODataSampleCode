@@ -129,6 +129,19 @@
                     </mu-list-item-content>
                 </mu-list-item>
             </mu-list>
+            <mu-flex justify-content="center" align-item="center">
+                <div class="btnBox">
+                    <mu-button round color="primary" :disabled="!ticketDetail.isOrigin" @click="open" full-width>
+                        Reply
+                        <mu-icon right value="send"></mu-icon>
+                    </mu-button>
+                </div>
+            </mu-flex>
+            <mu-dialog title="Dialog" width="360" transition="slide-bottom" fullscreen :open.sync="openDialog">
+                <mu-text-field v-model="msg" multi-line :rows="4" icon="comment"  placeholder="Input Reply Message" full-width></mu-text-field><br/>
+                <mu-button slot="actions" flat color="primary" @click="replyMsg">Reply</mu-button>
+                <mu-button slot="actions" flat color="primary" @click="cancel">Cancel</mu-button>
+            </mu-dialog>
         </div>
         <mu-bottom-nav class="tabBar">
             <mu-bottom-nav-item title="Detail" icon="details"></mu-bottom-nav-item>
@@ -143,7 +156,10 @@
             return {
                 ticketDetail:{
                     ServiceRequestLocation: {}
-                }
+                },
+                isEnable: true,
+                openDialog: false,
+                msg: ''
             }
         },
         computed: {
@@ -154,6 +170,37 @@
         methods: {
             backToList: function () {
                 this.$router.push('/TicketList');
+            },
+            open: function () {
+                this.openDialog = true;
+            },
+            replyMsg: function () {
+                let loading = this.$loading();
+                if (this.msg.length > 0) {
+                    this.$axios({
+                        method:'post',
+                        url: this.CONFIG.url.replyMsg,
+                        data: {
+                            msg: this.msg,
+                            ID: this.ticketDetail.SocialMediaActivityID
+                        }
+                    }).then((res) => {
+                        loading.close();
+                        if(res.status == 200) {
+                            this.openDialog = false;
+                            this.$toast.success('Reply successfully!');
+                        } else {
+                            this.openDialog = false;
+                            this.$toast.error('Reply Failed!')
+                        }
+                    })
+                }
+                // this.openDialog = false;
+
+            },
+            cancel: function () {
+                this.openDialog = false;
+                this.msg = '';
             }
         },
         mounted () {
@@ -167,7 +214,7 @@
                 }
             }).then((res) => {
                 loading.close();
-                console.log(res.data.ServiceRequestLocation);
+                console.log(res.data);
                 if (res.status == 200) {
                     this.ticketDetail = res.data;
                 }
@@ -180,12 +227,14 @@
 .mainContent {
     position: absolute;
     height: auto;
+    width: 100%;
     /* overflow: hidden; */
 }
 .clear {
     clear: both;
 }
 .listContent {
+    width: 100%;
     overflow: hidden;
     top: 3rem;
     position: absolute;
@@ -207,6 +256,10 @@
     bottom: 0;
     width: 100%;
     height: 3.5rem
+}
+.btnBox {
+    width: 50%;
+    margin-bottom: 20px;
 }
 
 </style>

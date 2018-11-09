@@ -6,7 +6,8 @@ const URL = {
     getContactCollection: HOST + '/getContactCollection',
     wxConfig: HOST + '/wxJssdk/getJssdk',
     getTicket: HOST + '/getTicket',
-    getTicketList: HOST + '/getTicketList'
+    getTicketList: HOST + '/getTicketList',
+    replyMsg: HOST + '/replyMsg'
 }
 
 module.exports = {

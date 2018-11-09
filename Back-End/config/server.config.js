@@ -7,6 +7,7 @@ const apiList = {
     SMUP: 'SocialMediaUserProfileCollection',
     SMA: 'SocialMediaActivityCollection',
     BP: 'SocialMediaUserProfileBupaReferenceCollection',
+    // SMAChild: 'SocialMediaActivityToChildSocialMediaActivityCollection',
     getSMUP: 'GetSocialMediaUserProfile',
     ServiceRequestBusinessTransactionDocumentReference: 'ServiceRequestBusinessTransactionDocumentReferenceCollection',
     ServiceRequest: 'ServiceRequestCollection',
@@ -19,11 +20,14 @@ const authorization = {
 
 const codeCollection = {
     typeCode: '1607',
-    providerID:'FB',
-    CategoryCode: '02',
+    providerID:'WXOData',
+    SMUPCategoryCode: '02',
+    SMACategoryCode: '001',
     roleCode: 'BUP001',
     BPCategoryCode: '1',
-    wxChannelCode: '008'
+    wxChannelCode: '008',
+    SocialMediaChannelCode: '001',
+    InitiatorCode: '2'
 };
 
 
