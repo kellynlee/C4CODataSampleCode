@@ -10,7 +10,7 @@ import Toast from 'muse-ui-toast';
 import Message from 'muse-ui-message';
 import configData from '../config/api.config';
 import wx from 'weixin-jsapi';
-
+import common from '../common/common.js';
 // import apiConfig from '../config/api.config';
 
 Vue.use(MuseUI);
@@ -24,7 +24,7 @@ Vue.config.productionTip = false;
 axios.defaults.baseURL = 'api/';
 Vue.prototype.$axios = axios;
 Vue.prototype.CONFIG = configData;
-
+Vue.prototype.common = common;
 new Vue({
   el: '#app',
   router: router,

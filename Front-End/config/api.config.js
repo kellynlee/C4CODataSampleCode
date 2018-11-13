@@ -7,7 +7,9 @@ const URL = {
     wxConfig: HOST + '/wxJssdk/getJssdk',
     getTicket: HOST + '/getTicket',
     getTicketList: HOST + '/getTicketList',
-    replyMsg: HOST + '/replyMsg'
+    replyMsg: HOST + '/replyMsg',
+    getSMUP: HOST + '/getSMUP',
+    getOpenID: HOST + '/getOpenID'
 }
 
 module.exports = {

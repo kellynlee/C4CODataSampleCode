@@ -1,22 +1,45 @@
 <template>
-  <div class="mainBody">
-    <mu-form ref='form' :model="formData" :label-width="80">
-        <mu-form-item prop="phone" label="Phone" :rules="inputValidator">
-            <mu-text-field v-model="formData.phone" prop="phone"></mu-text-field>
-        </mu-form-item>
-        <mu-form-item>
-            <mu-button color="primary" @click="submitData" data-mu-loading-size="24" class="button" :disabled="isClick" v-loading="isClick">Submit</mu-button>
-            <mu-button @click="cancelInput" class="button">Cancel</mu-button>
-        </mu-form-item>
-    </mu-form>
-    <mu-paper class="paper" :z-depth="4">
-        <mu-flex v-for="contact in contactList" :key="contact.id" class="radioContent">
-            <mu-radio :value="contact" :label="contact.FirstName" v-model="selectedContact" @change="onSelect" class="radio"></mu-radio>
-        </mu-flex>
-        <mu-button v-if="isSelected" color="primary" @click="createBP" class="button">Create</mu-button>
-        <mu-button v-if="isSelected" class="button" >Cancel</mu-button>
-    </mu-paper>
-  </div>
+    <div class="mainBody">
+        <div v-if="!isLinked">
+            <mu-form ref='form' :model="formData" :label-width="80">
+                <mu-form-item prop="phone" label="Phone" :rules="inputValidator">
+                    <mu-text-field v-model="formData.phone" prop="phone"></mu-text-field>
+                </mu-form-item>
+                <mu-form-item>
+                    <mu-button color="primary" @click="submitData" data-mu-loading-size="24" class="button" :disabled="isClick" v-loading="isClick">Submit</mu-button>
+                    <mu-button @click="cancelInput" class="button">Cancel</mu-button>
+                </mu-form-item>
+            </mu-form>
+            <mu-paper class="paper" :z-depth="4">
+                <mu-flex v-for="contact in contactList" :key="contact.id" class="radioContent">
+                    <mu-radio :value="contact" :label="contact.FirstName" v-model="selectedContact" @change="onSelect" class="radio"></mu-radio>
+                </mu-flex>
+                <mu-button v-if="isSelected" color="primary" @click="createBP" class="button">Create</mu-button>
+                <mu-button v-if="isSelected" class="button" >Cancel</mu-button>
+            </mu-paper>
+        </div>
+        <div v-if="isLinked">
+            <mu-list>
+                <mu-list-item>
+                    <mu-list-item-content>
+                        <mu-list-item-title>Your Contact:</mu-list-item-title>
+                    </mu-list-item-content>
+                </mu-list-item>
+                <mu-list-item>
+                    <mu-list-item-content>
+                        <mu-list-item-title>Name:</mu-list-item-title>
+                        <mu-list-item-sub-title>{{contactDetail.Name}}</mu-list-item-sub-title>
+                    </mu-list-item-content>
+                </mu-list-item>
+                <mu-list-item>
+                    <mu-list-item-content>
+                        <mu-list-item-title>Phone:</mu-list-item-title>
+                        <mu-list-item-sub-title>{{contactDetail.Phone}}</mu-list-item-sub-title>
+                    </mu-list-item-content>
+                </mu-list-item>
+            </mu-list>
+        </div>
+    </div>
 </template>
 
 <script> 
@@ -35,10 +58,16 @@ export default {
             selectedContact: '',
             isClick: false,
             isSelected: false,
-            isQuery: true
+            isQuery: true,
+            contactDetail: {},
+            isLinked: false
         }
     },
-
+    computed: {
+        wxCode () {
+            return this.$route.query.code;
+        }
+    },
     methods: {
         onSelect: function () {
             this.isSelected = true;
@@ -59,27 +88,30 @@ export default {
                 } else {
                     thiz.$confirm('Confirm your information?', 'Confirm').then(({ result }) => {
                         if (result) {
-                            let lodaing = this.$loading();
+                            var loading = this.$loading();
                             thiz.isQuery = true;
-                            thiz.$axios({
-                                method: 'post',
-                                url: this.CONFIG.url.getContactCollection,
-                                data: {
-                                    phone: this.formData.phone
-                                }
-                            }).then((res => {
-                                thiz.isQuery = false;
-                                loading.close();
-                                console.log(res)
-                                if(res.data.isCreated) {
-                                    thiz.$toast.success('Success');
-                                } else if (res.data.d.results.length > 0) {
-                                    thiz.$toast.success('Success');
-                                    thiz.contactList = res.data.d.results.concat();
-                                } else {
-                                    thiz.$toast.error('No Contact Found');
-                                }
-                            }))
+                            this.openID.then((id) => {
+                                thiz.$axios({
+                                    method: 'post',
+                                    url: this.CONFIG.url.getContactCollection,
+                                    data: {
+                                        openID: id,
+                                        phone: this.formData.phone
+                                    }
+                                }).then((res => {
+                                    thiz.isQuery = false;
+                                    loading.close();
+                                    console.log(res)
+                                    if(res.data.isCreated) {
+                                        thiz.$toast.success('Success');
+                                    } else if (res.data.d.results.length > 0) {
+                                        thiz.$toast.success('Success');
+                                        thiz.contactList = res.data.d.results.concat();
+                                    } else {
+                                        thiz.$toast.error('No Contact Found');
+                                    }
+                                }))
+                            })
                         }
                     })
                 }
@@ -88,20 +120,44 @@ export default {
         createBP: function () {
             var thiz = this;
             var UUID = this.selectedContact.ObjectID.slice(0,8) +"-"+ this.selectedContact.ObjectID.slice(8,12) + "-"+this.selectedContact.ObjectID.slice(12,16) + "-" + this.selectedContact.ObjectID.slice(16,20) + "-" + this.selectedContact.ObjectID.slice(20,this.selectedContact.ObjectID.length);
-            this.$axios({
-                url: this.CONFIG.url.createBP,
-                method: 'post',
-                data: {
-                    UUID: UUID
-                }
-            }).then((res) => {
-                this.$toast.success('Create Successfully');
-                thiz.isSelected = false;
+            this.openID.then((id) => {
+                this.$axios({
+                    url: this.CONFIG.url.createBP,
+                    method: 'post',
+                    data: {
+                        UUID: UUID,
+                        openID: id
+                    }
+                }).then((res) => {
+                    this.$toast.success('Create Successfully');
+                    thiz.isSelected = false;
+                })
             })
         },
         cancelInput: function () {
             this.formData.phone = '';
         },
+    },
+    mounted () {
+        // let code = this.$router.query.code;
+        // console.log(this.wxCode);
+        let loading = this.$loading();
+        this.openID = this.common.getOpenID(this.wxCode);
+        this.openID.then((id) => {
+            this.$axios({
+                method:'post',
+                url: this.CONFIG.url.getSMUP,
+                data: {
+                    openID: id
+                }
+            }).then((res) => {
+                loading.close();
+                if (res.data) {
+                    this.contactDetail = res.data;
+                    this.isLinked = true
+                }
+            })
+        })
     }
 }
 </script>
@@ -110,7 +166,7 @@ export default {
 /* @import '//fonts.useso.com/css?family=Roboto:300,400,500,700,400italic'; */
 .mainBody {
     height:100%;
-    margin: 50px 20px;
+    margin: 1.25rem;
 }
 
 .radio {

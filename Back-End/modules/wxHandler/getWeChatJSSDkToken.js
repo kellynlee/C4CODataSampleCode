@@ -1,5 +1,5 @@
 const rp = require('request-promise');
-const tokenStore = require('../store/tokenStore');
+const tokenStore = require('../../store/tokenStore');
 
 const getToken = function (access_token) {
   return new Promise ((res, req) => {

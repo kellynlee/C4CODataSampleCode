@@ -11,7 +11,9 @@
                 <mu-text-field v-model="form.serialID"></mu-text-field>
             </mu-form-item>
             <mu-form-item label="Priority" prop="priority" >
-                <mu-text-field v-model="form.priority"></mu-text-field>
+                <mu-select v-model="form.priority" @change="ChangeSelect">
+                    <mu-option v-for="option in codeOptions" :key="option.code" :label="option.text" :value="option.code"></mu-option>
+                </mu-select>
             </mu-form-item>
             <mu-form-item label="Request on-site Date" prop="date" >
                 <mu-date-input v-model="form.date" type="dateTime"></mu-date-input>
@@ -42,7 +44,18 @@ export default {
             isSubmit: false,
             validateRules: [
                 { validate: (val) => !!val, message: 'Please input Title' }
-            ]
+            ],
+            codeOptions: [
+                {code:"1",text:"Very High"},
+                {code:"2",text:"High"},
+                {code:"3",text:"Medium"},
+                {code:"7",text:"Low"}
+            ],
+        }
+    },
+    computed: {
+        wxCode () {
+            return this.$route.query.code;
         }
     },
     methods: {
@@ -53,29 +66,32 @@ export default {
                 this.$alert()
             } else {
                 let loading = this.$loading();
-                this.$axios({
-                    url: this.CONFIG.url.createTicket,
-                    data: {
-                        Name: this.form.title,
-                        Description: this.form.description,
-                        SerialID: this.form.serialID,
-                        ServicePriorityCode: this.form.priority,
-                        OnSiteArrivalDateTime: this.form.date
-                    },
-                    method: 'post'
-                }).then((res) => {
-                    console.log(res);
-                    loading.close();
-                    if(res.status == 200) {
-                        // thiz.Submit = 'Submit';
-                        thiz.isSubmit = false;
-                        thiz.$toast.success('Create Successfully');
-                        if (isPrd) {
-                            wx.ready(() => {
-                                wx.closeWindow();
-                            })
+                this.openID.then((id) => {
+                    this.$axios({
+                        url: this.CONFIG.url.createTicket,
+                        data: {
+                            openID: id,
+                            Name: this.form.title,
+                            Description: this.form.description,
+                            SerialID: this.form.serialID,
+                            ServicePriorityCode: this.form.priority,
+                            OnSiteArrivalDateTime: this.form.date
+                        },
+                        method: 'post'
+                    }).then((res) => {
+                        console.log(res);
+                        loading.close();
+                        if(res.status == 200) {
+                            // thiz.Submit = 'Submit';
+                            thiz.isSubmit = false;
+                            thiz.$toast.success('Create Successfully');
+                            if (isPrd) {
+                                wx.ready(() => {
+                                    wx.closeWindow();
+                                })
+                            }
                         }
-                    }
+                    })
                 })
             }
         },
@@ -106,7 +122,8 @@ export default {
                 signature: data.data.signature,
                 jsApiList: ['closeWindow']
             })
-        })
+        });
+        this.openID = this.common.getOpenID(this.wxCode);
     }
 }
 

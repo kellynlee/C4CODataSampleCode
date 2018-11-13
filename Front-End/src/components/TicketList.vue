@@ -1,6 +1,6 @@
 <template>
     <div class="mainContent">
-        <mu-appbar style="width: 100%;" title="Ticket List" color="primary" class="header"></mu-appbar>
+        <!-- <mu-appbar style="width: 100%;" title="Ticket List" color="primary" class="header"></mu-appbar> -->
         <div class="listContent">
             <mu-load-more :loading="loading" @load="load">
                 <div v-for="ticket in ticketList" :key="ticket.ID">
@@ -46,6 +46,11 @@ import TicketListItem from './TicketListItem';
                 key: 0
             }
         },
+        computed: {
+            wxCode () {
+                return this.$route.query.code;
+            }
+        },
         components: {
             TicketListItem: TicketListItem
         },
@@ -55,46 +60,49 @@ import TicketListItem from './TicketListItem';
                 this.$router.push('/TicketDetail/' + id);
             },
             load: function () {
-                if (this.ticketList.length <= 10) {
-                    return false
-                } else {
-                    this.loading = true;
-                    this.key += 9;
-                    this.$axios({
-                        method: 'post',
-                        url: this.CONFIG.url.getTicketList,
-                        data: {
-                            key: this.key
-                        }
-                    }).then((res) => {
-                        this.loading = false
-                        if (res.data.length > 0) {
-                            this.ticketList = this.ticketList.concat(res.data);
-                        } else {
-                            this.$toast.error('No more ticket!')
-                        }
-                    })
+                if (this.ticketList.length < 10) {
+                    return false;
                 }
+                this.loading = true;
+                this.key += 10;
+                this.$axios({
+                    method: 'post',
+                    url: this.CONFIG.url.getTicketList,
+                    data: {
+                        key: this.key
+                    }
+                }).then((res) => {
+                    this.loading = false
+                    if (res.data.length > 0) {
+                        this.ticketList = this.ticketList.concat(res.data);
+                    } else {
+                        this.$toast.error('No more ticket!')
+                    }
+                })
             },
         },
         mounted() {
             let loading = this.$loading();
-            this.$axios({
-                method: 'post',
-                url: this.CONFIG.url.getTicketList,
-                data: {
-                    key: this.key
-                }
-            }).then((res) => {
-                loading.close();
-                if (res.data.length == 0) {
-                    this.$toast.error('No ticket found!');
-                    return false;
-                } else {
-                    this.ticketList = this.ticketList.concat(res.data);
-                }
+            this.openID = this.common.getOpenID(this.wxCode);
+            this.openID.then((id) => {
+                this.$axios({
+                    method: 'post',
+                    url: this.CONFIG.url.getTicketList,
+                    data: {
+                        key: this.key,
+                        openID: id
+                    }
+                }).then((res) => {
+                    loading.close();
+                    if (res.data.length == 0) {
+                        this.$toast.error('No ticket found!');
+                        return false;
+                    } else {
+                        this.ticketList = this.ticketList.concat(res.data);
+                    }
+                })
             })
-        },
+        }
     }
 </script>
 
@@ -113,7 +121,7 @@ import TicketListItem from './TicketListItem';
 }
 .listContent {
     position: absolute;
-    top: 3rem;
+    top: 1.25rem;
     width: 100%;
 }
 </style>
