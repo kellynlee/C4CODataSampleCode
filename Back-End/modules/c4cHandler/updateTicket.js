@@ -1,7 +1,7 @@
 module.exports = function (ID, data, token) {
     const rp = require('request-promise');
     const getToken = require('./getToken');
-    const configData = require('../config/server.config');
+    const configData = require('../../config/server.config');
     const getOption = require('./createOptionData');
     let queryParams = configData.apiList.ServiceRequest + "("+"\'" + ID + "\'" + ")";
     console.log(queryParams)

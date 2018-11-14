@@ -4,7 +4,6 @@ import SocialMediaActivityCreate from '../components/SocialMediaActivityCreate';
 import ContactCollection from '../components/ContactCollection';
 import TicketList from '../components/TicketList';
 import TicketDetail from '../components/TicketDetail/TicketDetail';
-import InteractionHistory from '../components/InteractionHistory';
 
 Vue.use(Router)
 var router = new Router({
@@ -29,11 +28,6 @@ var router = new Router({
         name: 'TicketDetail',
         path: '/TicketDetail/:id',
         component: TicketDetail
-      },
-      {
-        name: 'InteractionHistory',
-        path: '/TicketDetail/InteractionHistory/:id',
-        component: InteractionHistory
       }
   ]
 })

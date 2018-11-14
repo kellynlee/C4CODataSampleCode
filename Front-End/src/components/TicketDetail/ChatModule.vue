@@ -14,15 +14,15 @@
             </mu-col>
         </mu-row>
         <mu-row gutter v-if="isInBound" >
-            <mu-col span="10"  justify-content="center" align-items="start">
+            <mu-col span="8" offset="2" justify-content="center">
                 <div class="textBox inBound" >{{ message.Text }}</div>
             </mu-col>
             <mu-col span="2">
                 <mu-flex class="authorBox" direction="column" justify-content="center" align-items="center">
-                    <mu-avatar color="indigo">
+                    <mu-avatar color="indigo" style="margin-bottom:5px">
                         <mu-icon value="account_circle"></mu-icon>
                     </mu-avatar>
-                    <div>{{ message.SocialMediaMessageAuthor }}</div>
+                    <div style="font-size: 0.75rem">{{ message.SocialMediaMessageAuthor }}</div>
                 </mu-flex>
             </mu-col>
         </mu-row>
@@ -41,7 +41,11 @@
         },
         computed: {
             isInBound () {
-                return this.message.inBound
+                if (this.message.InitiatorCode == '2') {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
     }
@@ -67,7 +71,7 @@
 }
 .inBound {
     background: #4caf50;
-    text-align: right;
+    text-align: left;
     display: inline-block;
     right: 0;
 }
@@ -76,11 +80,11 @@
     content: "";
     width: 0;
     height: 0;
-    right: -9px;
-    top: 20px;
-    border-left: 10px solid #4caf50;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
+    right: -5px;
+    top: 5px;
+    border-left: 18px solid #4caf50;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
 }
 .outBound:before{
     position: absolute;
@@ -88,7 +92,7 @@
     width: 0;
     height: 0;
     left: -9px;
-    top: 20px;
+    top: 5px;
     border-right: 10px solid #eceff1;
     border-top: 10px solid transparent;
     border-bottom: 10px solid transparent;

@@ -8,15 +8,15 @@ var app = express();
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const history = require('connect-history-api-fallback');
-const wxValidate = require('./modules/handleWXValidation');
+const wxValidate = require('./modules/wxHandler/handleWXValidation');
 const getWxToken = require('./modules/wxHandler/getWeChatToken');
 const configData = require('./config/server.config');
-const createMenu = require('./modules/createMenu');
-const getOption = require('./modules/createOptionData');
+const createMenu = require('./modules/wxHandler/createMenu');
+const getOption = require('./modules/c4cHandler/createOptionData');
 const rp = require('request-promise');
-const getUserProfile = require('./modules/getUserProfile');
-const updateTicket = require('./modules/updateTicket');
-const getToken = require('./modules/getToken');
+const getUserProfile = require('./modules/c4cHandler/getUserProfile');
+const updateTicket = require('./modules/c4cHandler/updateTicket');
+const getToken = require('./modules/c4cHandler/getToken');
 const xml2js = require('xml2js');
 const parser = new xml2js.Parser();
 const getWxUserInfo = require('./modules/wxHandler/getWxUserInfo');
@@ -25,6 +25,7 @@ const crypto = require('crypto');
 const tools = require('./modules/Tools');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
+const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
 app.use(history({
   htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
 }))
@@ -38,9 +39,9 @@ app.use(express.static(path.join(__dirname, 'views')));
 app.engine('html',ejs.__express);
 app.set('view engine', 'html');
 
-getWxToken().then((data) => {
-  createMenu(data.access_token);
-});
+// getWxToken().then((data) => {
+//   createMenu(data.access_token);
+// });
 
 
 app.all('*',function (req, res, next) {
@@ -175,11 +176,11 @@ app.post('/getSMUP', (req, res) => {
     if(data) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
       let ContactID = data.replace(reg, "$2");
-      let queryParam = configData.apiList.Contact + "?$format=json&$filter=ContactID eq \'" + ContactID +"\'";
+      let queryParam = configData.apiList.Contact + "?$filter=ContactID eq \'" + ContactID +"\'";
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
         // console.log(data);
-        let contact = JSON.parse(data).d.results[0];
+        let contact = data.d.results[0];
         console.log(contact);
         let contactDetail = {
           Name: contact.Name,
@@ -196,14 +197,13 @@ app.post('/getSMUP', (req, res) => {
 app.post('/getContactCollection',(req, res) => {
   console.log('enter');
   console.log(req.body);
-  let queryParam =configData.apiList.Contact + "?$format=json&$filter=Phone eq \'*" + req.body.phone + "*\'";
+  let queryParam =configData.apiList.Contact + "?$filter=Phone eq \'*" + req.body.phone + "*\'";
   let options = getOption('GET', '', queryParam, true);
   // console.log(options);
   getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID').then((SMUPNodeID) => {
     rp(options).then((data) => {
       console.log('success')
-      let result = JSON.parse(data);
-      let contact = result.d.results;
+      let contact = data.d.results;
       if (contact.length == 1) {
         let ObjectID = contact[0].ObjectID;
         let UUID = tools.UUIDEndoce(ObjectID);
@@ -355,17 +355,38 @@ app.post('/getTicketList', (req, res) => {
   console.log('enter')
   let key = req.body.key;
   let openID = req.body.openID;
-  getUserProfile(openID,'SocialMediaUserAccountID', 'AccountInternalID').then((data) => {
+  console.log(openID)
+  getUserProfile(openID,'SocialMediaUserAccountID', 'AccountInternalID').then((id) => {
     console.log(key)
-    if(data) {
+    if(id) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
-      let InternalID = data.replace(reg, "$2");
-      let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$format=json&$orderby=ServiceRequestUserLifeCycleStatusCode desc&$top=10&$skip=" + key;
+      let InternalID = id.replace(reg, "$2");
+      let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$orderby=ServiceRequestUserLifeCycleStatusCode desc&$top=10&$skip=" + key;
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
-        let result = JSON.parse(data)
-        let list = result.d.results;
-        console.log(list)
+        let list = data.d.results;
+        // let channelArray = [];
+        // list.forEach((elem) => {
+        //   let ObjectID = elem.ObjectID;
+        //   var getChannel = new Promise((res,rej) => {
+        //     getSocialMediaActivity('',ObjectID).then((data) => {
+        //       res(data);
+        //     })
+        //   });
+        //   channelArray.push(getChannel);
+        // })
+        // Promise.all(channelArray).then((result) => {
+        //   let i = 0;
+        //   result.forEach((elem) => {
+        //     if (elem) {
+        //       list[i].Channel = elem.SocialMediaActivityProviderName;
+        //     } else {
+        //       list[i].Channel = '';
+        //     }
+        //     i++
+        //   });
+        //   res.send(list)
+        // });
         res.send(list)
       })
     }
@@ -374,51 +395,63 @@ app.post('/getTicketList', (req, res) => {
 
 app.post('/getTicket',(req, res) => {
   if (req.body.ID) {
-    let queryParam = configData.apiList.ServiceRequest + "?$format=json&$filter=ID eq \'" + req.body.ID + "\'&$expand=ServiceRequestBusinessTransactionDocumentReference";
-    let options = getOption('GET', '', queryParam, false);
-    rp(options).then((data) => {
-      console.log(JSON.parse(data));
-      let result = JSON.parse(data);
-      let ticketDetail = result.d.results[0];
-      let nodeID = ticketDetail.ObjectID;
-      let ServiceRequestDoc = ticketDetail.ServiceRequestBusinessTransactionDocumentReference
-      if (ServiceRequestDoc.length > 0) {
-        let SocialMedia = ServiceRequestDoc.find((elem) => (elem.TypeCode == '1607'));
-        if (SocialMedia) {
-          let SocialMediaID = SocialMedia.ID;
-          ticketDetail.isOrigin = true;
-          ticketDetail.SocialMediaActivityID = SocialMedia.ID;
-        } else {
-          ticketDetail.isOrigin = false;
-        }
-        ticketDetail.isOrigin = true;
-      } else {
-        ticketDetail.isOrigin = false;
-      }
-      let queryParam = configData.apiList.ServiceRequestLocation + "?$filter=ParentObjectID eq \'" + nodeID + "\'&$expand=ServiceRequestServicePointLocationAddress";
+    let SocialMediaActivity = getSocialMediaActivity(req.body.ID);
+    let TicketwithLocation = new Promise((res, rej) => {
+      let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + req.body.ID + "\'&$expand=ServiceRequestServicePointLocation/ServiceRequestServicePointLocationAddress";
       let options = getOption('GET', '', queryParam, false);
-      options.json = true;
       rp(options).then((data) => {
-        if (data.d.results[0].ServiceRequestServicePointLocationAddress) {
-          ticketDetail.ServiceRequestLocation = data.d.results[0].ServiceRequestServicePointLocationAddress;
+        if (data.d.results[0].ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress) {
+          res(data.d.results[0]);
         }
-        res.send(ticketDetail)
       })
+    })
+    Promise.all([SocialMediaActivity, TicketwithLocation]).then((result) => {
+      let activity = result[0];
+      let ticketDetail = result[1];
+      if (ticketDetail) {
+        ticketDetail.RequestedFulfillmentPeriodStartDateTime = tools.DateFormatter(ticketDetail.RequestedFulfillmentPeriodStartDateTime);
+        ticketDetail.RequestedFulfillmentPeriodEndDateTime = tools.DateFormatter(ticketDetail.RequestedFulfillmentPeriodEndDateTime);
+      }
+      if (activity) {
+        ticketDetail.RootSocialMediaActivity = activity;
+        // if (activity.SocialMediaActivityProviderID == configData.codeCollection.providerID) {
+        //   ticketDetail.isOrigin = true;
+        // } else {
+        //   ticketDetail.isOrigin = false;
+        // }
+          ticketDetail.isOrigin = true;
+      }
+      res.send(ticketDetail);
     })
   }
 });
 
+app.post('/getInteractionHistory', (req, res) => {
+  console.log('enter')
+  let nodeID = req.body.ObjectID;
+  if (nodeID) {
+    let queryParam = configData.apiList.SocialMediaActivityInteractionHistory + "?RootSocialMediaActivityNodeID=\'" + nodeID + "\'";
+    let options = getOption('GET', '', queryParam, false);
+    //for local testing in axp2
+    options.uri = "https://axp-cust220.dev.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/GetAllChildSocialMediaActivity?RootSocialMediaActivityNodeID=%2700163E05EC341ED38FB7A26461DBF903%27"
+    rp(options).then((data) => {
+      if (data.d.results[0]) {
+        console.log(data.d.results[0]);
+        res.send(data.d.results)
+      }
+    })
+  }
+})
+
 app.post('/replyMsg', (req, res) => {
   if (req.body.msg) {
     let openID = req.body.openID;
-    let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + req.body.ID + "\'&$format=json";
+    let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + req.body.ID + "\'";
     let options = getOption('GET', '', queryParam, true);
     let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID');
     let RootSMAUUID = new Promise((res, rej) => {
       rp(options).then((data) => {
-        let results = JSON.parse(data);
-        console.log(results.d.results)
-        res(results.d.results[0].RootSocialMediaActivityUUID);
+        res(data.d.results[0].RootSocialMediaActivityUUID);
       })
     });
     let token = getToken();
@@ -470,27 +503,22 @@ app.post('/wechat/c4c/reply', (req, res) => {
     openID: ''
   }
   let url = '/TicketDetail/' + reply.service_req_no;
-  let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + ticketID + "\'&$expand=ServiceRequestBusinessTransactionDocumentReference&$format=json"
-  let options = getOption('GET', '', queryParam, false);
-  rp(options).then((data) => {
-    let ticketTransactionDocument = JSON.parse(data).d.results[0].ServiceRequestBusinessTransactionDocumentReference;
-    let SocialMedia = ticketTransactionDocument.find((elem) => (elem.TypeCode == '1607'));
-    console.log(SocialMedia);
-    if (SocialMedia) {
-      let SMAID = SocialMedia.ID;
-      let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + SMAID + "\'&$format=json";
+  getSocialMediaActivity(ticketID).then((data) => {
+    if (data) {
+      let SMAID = data.ID;
+      let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + SMAID + "\'";
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
-        if (JSON.parse(data).d.results[0]) {
-          let SocialMediaUserProfileUUID = JSON.parse(data).d.results[0].SocialMediaUserProfileUUID;
+        if (data.d.results[0]) {
+          let SocialMediaUserProfileUUID = data.d.results[0].SocialMediaUserProfileUUID;
           if (SocialMediaUserProfileUUID) {
             let ObjectID = SocialMediaUserProfileUUID.replace(new RegExp(/-/g),'');
             console.log(ObjectID)
-            let queryParam = configData.apiList.SMUP + "(\'" + ObjectID + "\')/SocialMediaUserProfileUserInformation?$format=json";
+            let queryParam = configData.apiList.SMUP + "(\'" + ObjectID + "\')/SocialMediaUserProfileUserInformation";
             let options = getOption('GET', '', queryParam, false);
             rp(options).then((data) => {
-              if (JSON.parse(data).d.results[0]) {
-                let openID = JSON.parse(data).d.results[0].SocialMediaUserAccountID;
+              if (data.d.results[0]) {
+                let openID = data.d.results[0].SocialMediaUserAccountID;
                 console.log(openID)
                 if (openID) {
                   replyMsg.openID = openID;

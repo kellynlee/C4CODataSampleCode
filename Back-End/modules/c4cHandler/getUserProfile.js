@@ -1,6 +1,6 @@
 module.exports = function(data, param, requireData) {
-    const config = require('../config/server.config');
-    const getOption = require('../modules/createOptionData');
+    const config = require('../../config/server.config');
+    const getOption = require('./createOptionData');
     const queryParam =config.apiList.getSMUP+ "?" + param + "=\'" + data + "\'";
     const rp = require('request-promise');
     let options = getOption('GET', '', queryParam, true);

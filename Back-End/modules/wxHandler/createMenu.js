@@ -1,5 +1,5 @@
-const wxConfig = require('../config/wechatConfig');
-const serverConfig = require('../config/server.config');
+const wxConfig = require('../../config/wechatConfig');
+const serverConfig = require('../../config/server.config');
 const rp = require('request-promise')
 module.exports =  function (access_token) {
     let options = {

@@ -57,18 +57,6 @@
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
-                        <mu-list-item-title>Warranty</mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.WarrantyGoodwillCode}}</mu-list-item-sub-title>
-                    </mu-list-item-content>
-                </mu-list-item>
-                <mu-list-item>
-                    <mu-list-item-content>
-                        <mu-list-item-title>WarrantyDate: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.WarrantyStartdatetimeContent}}</mu-list-item-sub-title>
-                    </mu-list-item-content>
-                </mu-list-item>
-                <mu-list-item>
-                    <mu-list-item-content>
                         <mu-list-item-title>ServiceTechnician:</mu-list-item-title>
                         <mu-list-item-sub-title>{{detail.ServicePerformerPartyName}}</mu-list-item-sub-title>
                     </mu-list-item-content>
@@ -76,37 +64,37 @@
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>Country: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestLocation.CountryText}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.CountryText}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>Street: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestLocation.Street}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.Street}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
-                        <mu-list-item-title>HouseNumber: {{detail.ServiceRequestLocation.HouseNumber}}</mu-list-item-title>
+                        <mu-list-item-title>HouseNumber: {{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.HouseNumber}}</mu-list-item-title>
                         <mu-list-item-sub-title></mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>City: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestLocation.City}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.City}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>State: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestLocation.State}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.State}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>Postal: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestLocation.PostalCode}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.PostalCode}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
@@ -130,9 +118,9 @@
                     </mu-button>
                 </div>
             </mu-flex>
-            <mu-dialog title="Dialog" width="360" transition="slide-bottom" fullscreen :open.sync="openDialog">
-                <mu-text-field v-model="msg" multi-line :rows="4" icon="comment"  placeholder="Input Reply Message" full-width></mu-text-field><br/>
-                <mu-button slot="actions" flat color="primary" @click="replyMsg">Reply</mu-button>
+            <mu-dialog title="Reply" width="360" transition="slide-bottom" fullscreen :open.sync="openDialog">
+                <mu-text-field v-model="msg" multi-line :rows="8" :max-length="208" icon="comment"  placeholder="Input Reply Message" full-width style="padding-right: 20px"></mu-text-field><br/>
+                <mu-button slot="actions" flat color="primary" @click="replyMsg" :disabled="isInputValue">Reply</mu-button>
                 <mu-button slot="actions" flat color="primary" @click="cancel">Cancel</mu-button>
             </mu-dialog>
         </div>
@@ -152,6 +140,15 @@
                 type: Object
             }
         },
+        computed: {
+            isInputValue () {
+                if (this.msg.length > 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        },
         methods: {
             backToList: function () {
                 this.$router.push('/TicketList');
@@ -169,7 +166,7 @@
                             data: {
                                 openID: id,
                                 msg: this.msg,
-                                ID: this.detail.SocialMediaActivityID
+                                ID: this.detail.RootSocialMediaActivity.ID
                             }
                         }).then((res) => {
                             loading.close();
@@ -193,4 +190,12 @@
         }
     }
 </script>
+
+<style scoped>
+.btnBox {
+    width: 50%;
+    margin-bottom: 20px;
+}
+</style>
+
 

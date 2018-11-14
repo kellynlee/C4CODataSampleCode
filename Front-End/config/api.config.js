@@ -9,7 +9,8 @@ const URL = {
     getTicketList: HOST + '/getTicketList',
     replyMsg: HOST + '/replyMsg',
     getSMUP: HOST + '/getSMUP',
-    getOpenID: HOST + '/getOpenID'
+    getOpenID: HOST + '/getOpenID',
+    getInteractionHistory: HOST + '/getInteractionHistory'
 }
 
 module.exports = {

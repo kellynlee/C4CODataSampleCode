@@ -6,7 +6,7 @@
             </mu-button>
             Detail
         </mu-appbar> -->
-        <component :is="componentId" class="listContent" :detail="ticketDetail" :interaction="interactionHistory"></component>
+        <component :is="componentId" class="listContent" :detail="ticketDetail" :activity="socialMediaActivity"></component>
         <mu-bottom-nav class="tabBar" :value.sync="componentId">
             <mu-bottom-nav-item title="Detail" icon="details" value="DetailComponent"></mu-bottom-nav-item>
             <mu-bottom-nav-item title="History" icon="history" value="InteractionComponent"></mu-bottom-nav-item>
@@ -21,8 +21,12 @@
         data () {
             return {
                 ticketDetail: {
-                    ServiceRequestLocation: {}
+                    // ServiceRequestLocation: {}
+                    ServiceRequestServicePointLocation: {
+                        ServiceRequestServicePointLocationAddress: {}
+                    }
                 },
+                socialMediaActivity: {},
                 interactionHistory:[
                     {
                         SocialMediaMessageAuthor: 'C4C',
@@ -58,7 +62,7 @@
             InteractionComponent: InteractionComponent
         },
         computed: {
-            ticketID () {
+            ObjectID () {
                 return this.$route.params.id;
             },
             wxCode () {
@@ -81,15 +85,16 @@
                 method: 'post',
                 url: this.CONFIG.url.getTicket,
                 data: {
-                    ID: this.ticketID
+                    ID: this.ObjectID
                 }
             }).then((res) => {
                 loading.close();
                 console.log(res.data);
                 if (res.status == 200) {
                     this.ticketDetail = res.data;
+                    this.socialMediaActivity = res.data.RootSocialMediaActivity;
                 }
-            })
+            });
         }
     }
 </script>
@@ -113,26 +118,12 @@
     overflow-y: scroll;
     /* margin-bottom: 7rem; */
 }
-.header {
-    position: fixed;
-    top: 0;
-    height: 3rem;
-    /* float: top; */
-}
-.header div {
-    height: 100%;
-    line-height: 3rem;
-}
 .tabBar {
     position: fixed;
     /* float: bottom; */
     bottom: 0;
     width: 100%;
     height: 3.5rem
-}
-.btnBox {
-    width: 50%;
-    margin-bottom: 20px;
 }
 
 </style>

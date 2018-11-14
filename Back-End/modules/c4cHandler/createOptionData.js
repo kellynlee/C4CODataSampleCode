@@ -1,5 +1,5 @@
 module.exports = function(method, body, param, jar) {
-    var config = require('../config/server.config');
+    var config = require('../../config/server.config');
     var headers = config.headers;
     var uri = config.proxyUrl + param;
     var options = {
@@ -16,5 +16,6 @@ module.exports = function(method, body, param, jar) {
     } else {
         options['body'] = body;
     }
+    options['json'] = true;
     return options;
 }

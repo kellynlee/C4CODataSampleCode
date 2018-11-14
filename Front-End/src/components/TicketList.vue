@@ -110,18 +110,8 @@ import TicketListItem from './TicketListItem';
 .mainContent {
     position: relative;
 }
-.header {
-    height: 3rem;
-    position: fixed;
-    top: 0;
-}
-.header div {
-    height: 100%;
-    line-height: 3rem;
-}
 .listContent {
     position: absolute;
-    top: 1.25rem;
     width: 100%;
 }
 </style>

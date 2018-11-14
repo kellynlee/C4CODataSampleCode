@@ -63,7 +63,7 @@ export default {
             let thiz = this;
             let isPrd =  Object.is(process.env.NODE_ENV, 'production');
             if (!this.form.title) {
-                this.$alert()
+                this.$alert('Please input title')
             } else {
                 let loading = this.$loading();
                 this.openID.then((id) => {
@@ -103,7 +103,8 @@ export default {
                 priority:'',
                 date:''
             }
-        }
+        },
+        ChangeSelect: function () {}
     },
     mounted: function () {
         this.$axios({
@@ -115,7 +116,7 @@ export default {
         }).then((data) => {
             console.log(data.data);
             wx.config({
-                debug: true,
+                debug: false,
                 appId: data.data.appId,
                 timestamp: data.data.timestamp,
                 nonceStr: data.data.nonceStr,
@@ -131,7 +132,7 @@ export default {
 
 <style scoped>
 .mainContent {
-    margin: 50px 20px;
+    margin: 1.25rem;
 }
 
 </style>

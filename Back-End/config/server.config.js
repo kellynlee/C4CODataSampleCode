@@ -7,11 +7,11 @@ const apiList = {
     SMUP: 'SocialMediaUserProfileCollection',
     SMA: 'SocialMediaActivityCollection',
     BP: 'SocialMediaUserProfileBupaReferenceCollection',
-    // SMAChild: 'SocialMediaActivityToChildSocialMediaActivityCollection',
     getSMUP: 'GetSocialMediaUserProfile',
     ServiceRequestBusinessTransactionDocumentReference: 'ServiceRequestBusinessTransactionDocumentReferenceCollection',
     ServiceRequest: 'ServiceRequestCollection',
-    ServiceRequestLocation: 'ServiceRequestServicePointLocationCollection'
+    ServiceRequestLocation: 'ServiceRequestServicePointLocationCollection',
+    SocialMediaActivityInteractionHistory: 'GetAllChildSocialMediaActivity',
 };
 const authorization = {
     Username: "Administration01",

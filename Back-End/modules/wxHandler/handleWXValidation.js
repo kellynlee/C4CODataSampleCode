@@ -1,5 +1,5 @@
 const signatureValidate = function (signature, timestamp, nonce) {
-    let wxConfig = require('../config/wechatConfig');
+    let wxConfig = require('../../config/wechatConfig');
     let crypto = require('crypto');
     let token = wxConfig.validationToken;
     let array = new Array(token, timestamp, nonce);
