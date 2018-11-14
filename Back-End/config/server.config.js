@@ -30,6 +30,11 @@ const codeCollection = {
     InitiatorCode: '2'
 };
 
+const templateCollection = {
+    ticketNotification: '3fTc7rji2UNiCeSSmJS-8bQ2omaScofgYId4hYNKnek',
+    socialInteractionNotification:'IpCjyMPUV-PMOTIh3ay1ynsVst3EjBLUXrH5CHLu8_g'
+}
+
 
 var headers = {
     'x-csrf-token': 'fetch',
@@ -49,5 +54,6 @@ module.exports = {
     authorization: authorization,
     headers: headers,
     codeCollection: codeCollection,
-    WeChat: WeChat
+    WeChat: WeChat,
+    templateCollection: templateCollection
 };

@@ -116,7 +116,7 @@ export default {
         }).then((data) => {
             console.log(data.data);
             wx.config({
-                debug: false,
+                debug: true,
                 appId: data.data.appId,
                 timestamp: data.data.timestamp,
                 nonceStr: data.data.nonceStr,

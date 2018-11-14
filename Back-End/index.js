@@ -39,9 +39,9 @@ app.use(express.static(path.join(__dirname, 'views')));
 app.engine('html',ejs.__express);
 app.set('view engine', 'html');
 
-// getWxToken().then((data) => {
-//   createMenu(data.access_token);
-// });
+getWxToken().then((data) => {
+  createMenu(data.access_token);
+});
 
 
 app.all('*',function (req, res, next) {
@@ -324,12 +324,15 @@ app.post('/createTicket', (req, res) => {
               let id = data.d.results.ID;
               let url = '/TicketDetail/' + id;
               let body = {
-                ID: {
-                  value: id,
-                  color: '#173177'
+                openID: openID,
+                data: {
+                  ID: {
+                    value: id,
+                    color: '#173177'
+                  }
                 }
               };
-              sendMsg(url, body);
+              sendMsg(url, body, configData.templateCollection.ticketNotification);
             })
           }
         }).catch((err) => {
@@ -498,6 +501,10 @@ app.post('/wechat/c4c/reply', (req, res) => {
       ID: {
         value: reply.service_req_no,
         color: '#173177'
+      },
+      Author: {
+        value: reply.author_name,
+        color: '#173177'
       }
     },
     openID: ''
@@ -522,7 +529,7 @@ app.post('/wechat/c4c/reply', (req, res) => {
                 console.log(openID)
                 if (openID) {
                   replyMsg.openID = openID;
-                  sendMsg(url, replyMsg);
+                  sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification);
                   res.status(200);
                   res.send();
                 }
