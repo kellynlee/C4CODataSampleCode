@@ -1,5 +1,5 @@
 const configData = require('../../config/server.config');
-const rp = require('request-promise');
+const rp = require('../requestPromise');
 const getOption = require('./createOptionData');
 const getActivityData = function (ID,ObjectID,res) {
     if(ID || ID.length>0) {

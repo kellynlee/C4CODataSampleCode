@@ -13,7 +13,6 @@ const getWxToken = require('./modules/wxHandler/getWeChatToken');
 const configData = require('./config/server.config');
 const createMenu = require('./modules/wxHandler/createMenu');
 const getOption = require('./modules/c4cHandler/createOptionData');
-const rp = require('request-promise');
 const getUserProfile = require('./modules/c4cHandler/getUserProfile');
 const updateTicket = require('./modules/c4cHandler/updateTicket');
 const getToken = require('./modules/c4cHandler/getToken');
@@ -23,6 +22,7 @@ const getWxUserInfo = require('./modules/wxHandler/getWxUserInfo');
 const getWxJSSDKToken = require('./modules/wxHandler/getWeChatJSSDkToken');
 const crypto = require('crypto');
 const tools = require('./modules/Tools');
+const rp = require('./modules/requestPromise');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
 const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
@@ -76,8 +76,8 @@ app.get('/wx/get_access_token', (req, res) => {
 });
 
 app.post('/wxJssdk/getJssdk', (req, res) => {
-  getWxToken().then((data) => {
-    getWxJSSDKToken(data.access_token).then((data) => {
+  getWxToken().then((access_token) => {
+    getWxJSSDKToken(access_token).then((data) => {
       let jsapi_ticket = data.token;
       let nonce_str = '123456';
       let timestamp = new Date().getTime();
@@ -159,7 +159,7 @@ app.post('/wx/c4c', (req, res) => {
   }
 });
 
-app.post('/getOpenID', (req, res, next) => {
+app.post('/getOpenID', (req, res) => {
   if (req.query.code) {
     getOpenID(req.body.code).then((data) => {
       res.send(data);
@@ -277,7 +277,7 @@ app.post('/createBP', (req, res) => {
 app.post('/createTicket', (req, res) => {
   console.log('start');
   console.log(req.body);
-  let token = getToken();
+  // let token = getToken();
   let ticketInfo = {
     Name: req.body.Name,
     Description: req.body.Description,
@@ -286,12 +286,11 @@ app.post('/createTicket', (req, res) => {
     OnSiteArrivalDateTime: req.body.OnSiteArrivalDateTime
   }
   let openID = req.body.openID;
-  let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID');
-  Promise.all([token, SMUPObjectID]).then((result) => {
+  let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID').then((result) => {
+    console.log('got smup')
     console.log(result);
-    if (result[0] && result[1]) {
-      let token = result[0];
-      let UUID = tools.UUIDEndoce(result[1]);
+    if (result) {
+      let UUID = tools.UUIDEndoce(result);
       let body = {
         CategoryCode: configData.codeCollection.SMACategoryCode,
         SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
@@ -302,9 +301,8 @@ app.post('/createTicket', (req, res) => {
         SocialMediaActivityProviderID: configData.codeCollection.providerID
       };
       let options = getOption('POST', body, configData.apiList.SMA, true);
-      options.headers["x-csrf-token"] = token;
-      options.json = true;
       rp(options).then((data) => {
+        console.log(data)
         let ID = data.d.results.ID;
         let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
         let options = getOption('GET', '', queryParam);
@@ -341,17 +339,77 @@ app.post('/createTicket', (req, res) => {
           res.send();
         })
       }).catch((err) => {
+        console.log(err)
         res.status(400);
-        res.send();
+        res.send(err);
       })
-    } else {
-      res.status(400);
-      res.send('fail')
     }
-  }).catch((err) => {
-    res.status(400);
-    res.send();
-  })
+  });
+  // Promise.all([token, SMUPObjectID]).then((result) => {
+  //   console.log(result);
+  //   if (result[0] && result[1]) {
+  //     let token = result[0];
+  //     let UUID = tools.UUIDEndoce(result[1]);
+  //     let body = {
+  //       CategoryCode: configData.codeCollection.SMACategoryCode,
+  //       SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
+  //       SocialMediaMessageID: new Date().valueOf().toString(),
+  //       InitiatorCode: configData.codeCollection.InitiatorCode,
+  //       SocialMediaUserProfileUUID: UUID,
+  //       Text: req.body.Description,
+  //       SocialMediaActivityProviderID: configData.codeCollection.providerID
+  //     };
+  //     let options = getOption('POST', body, configData.apiList.SMA, true);
+  //     options.headers["x-csrf-token"] = token;
+  //     options.json = true;
+  //     rp(options).then((data) => {
+  //       let ID = data.d.results.ID;
+  //       let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
+  //       let options = getOption('GET', '', queryParam);
+  //       options.json = true;
+  //       console.log('start creating')
+  //       rp(options).then((data) => {
+  //         // console.log(data.d.results[0]);
+  //         if (data.d.results[0]) {
+  //           // res.send(data.d.results[0]);
+  //           delete ticketInfo.Description;
+  //           updateTicket(data.d.results[0].ParentObjectID, ticketInfo, result[0]);
+  //           let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
+  //           // console.log(options);
+  //           options.json = true;
+  //           rp(options).then((data) => {
+  //             res.send(data);
+  //             let id = data.d.results.ID;
+  //             let url = '/TicketDetail/' + id;
+  //             let body = {
+  //               openID: openID,
+  //               data: {
+  //                 ID: {
+  //                   value: id,
+  //                   color: '#173177'
+  //                 }
+  //               }
+  //             };
+  //             sendMsg(url, body, configData.templateCollection.ticketNotification);
+  //           })
+  //         }
+  //       }).catch((err) => {
+  //         console.log(err)
+  //         res.status(400);
+  //         res.send();
+  //       })
+  //     }).catch((err) => {
+  //       res.status(400);
+  //       res.send();
+  //     })
+  //   } else {
+  //     res.status(400);
+  //     res.send('fail')
+  //   }
+  // }).catch((err) => {
+  //   res.status(400);
+  //   res.send();
+  // })
 });
 
 app.post('/getTicketList', (req, res) => {

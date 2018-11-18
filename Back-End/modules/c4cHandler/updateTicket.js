@@ -1,5 +1,5 @@
 module.exports = function (ID, data, token) {
-    const rp = require('request-promise');
+    const rp = require('../requestPromise');
     const getToken = require('./getToken');
     const configData = require('../../config/server.config');
     const getOption = require('./createOptionData');

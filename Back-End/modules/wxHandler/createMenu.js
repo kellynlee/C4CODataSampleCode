@@ -1,6 +1,7 @@
 const wxConfig = require('../../config/wechatConfig');
 const serverConfig = require('../../config/server.config');
-const rp = require('request-promise')
+const rp = require('request-promise');
+const request = require('request');
 module.exports =  function (access_token) {
     let options = {
         method: 'post',
@@ -31,7 +32,10 @@ module.exports =  function (access_token) {
         },
         json: true
       }
-      rp(options).then((data) => {
-        console.log(data)
+      // rp(options).then((data) => {
+      //   console.log(data)
+      // })
+      request(options,(error, response, body) => {
+        console.log(body);
       })
 }

@@ -1,16 +1,15 @@
 module.exports = function () {
-    const rp = require('request-promise');
+    const request = require('request');
     var token;
     const getOption = require('./createOptionData');
     var options = getOption('GET','','',true);
     options.resolveWithFullResponse = true;
-    console.log(options.headers);
+    // console.log(options.headers);
     return new Promise((res,rej) => {
-        rp(options).then((data) => {
-            console.log(data.headers)
-            res(data.headers['x-csrf-token']);
-        }).catch((err) => {
-            console.log(err)
+        request(options, (err, response, body) => {
+            console.log(response.headers)
+            // console.log(response.headers['x-csrf-token'])
+            res(response.headers['x-csrf-token'])
         })
     })
     // return token;
