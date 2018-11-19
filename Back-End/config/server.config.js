@@ -40,7 +40,8 @@ const templateCollection = {
 var headers = {
     'x-csrf-token': 'fetch',
     'Authorization': 'Basic ' + new Buffer(authorization.Username + ":" + authorization.Password).toString('base64'),
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept':'application/json'
 };
 
 const WeChat = {

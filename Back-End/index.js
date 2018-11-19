@@ -13,11 +13,6 @@ const getWxToken = require('./modules/wxHandler/getWeChatToken');
 const configData = require('./config/server.config');
 const createMenu = require('./modules/wxHandler/createMenu');
 const getOption = require('./modules/c4cHandler/createOptionData');
-<<<<<<< HEAD
-// const request = require('request');
-// const rp = require('request-promise');
-=======
->>>>>>> 372335b0d61700db456c19b3b944bd0b68cb33d1
 const getUserProfile = require('./modules/c4cHandler/getUserProfile');
 const updateTicket = require('./modules/c4cHandler/updateTicket');
 const getToken = require('./modules/c4cHandler/getToken');
@@ -31,7 +26,6 @@ const rp = require('./modules/requestPromise');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
 const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
-const rp = tools.requestPromise;
 app.use(history({
   htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
 }))
@@ -152,14 +146,8 @@ app.post('/wx/c4c', (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-app.post('/getOpenID', (req, res, next) => {
-  console.log(req.body);
-  if (req.body.code) {
-=======
 app.post('/getOpenID', (req, res) => {
   if (req.query.code) {
->>>>>>> 372335b0d61700db456c19b3b944bd0b68cb33d1
     getOpenID(req.body.code).then((data) => {
       console.log(data)
       res.send(data);
@@ -287,7 +275,7 @@ app.post('/createTicket', (req, res) => {
     OnSiteArrivalDateTime: req.body.OnSiteArrivalDateTime
   }
   let openID = req.body.openID;
-  let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID').then((result) => {
+  getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID').then((result) => {
     console.log('got smup')
     console.log(result);
     if (result) {
