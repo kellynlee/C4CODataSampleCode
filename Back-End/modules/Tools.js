@@ -30,14 +30,5 @@ const DateFormatter = function (date) {
     return formattedDate;
 }
 
-const requestPromise = function (options) {
-    return new Promise((res, rej) => {
-        request(options,function(error, response, body) {
-            res(response)
-        })
-    })
-};
-
 exports.UUIDEndoce = UUIDEndoce;
 exports.DateFormatter = DateFormatter;
-exports.requestPromise = requestPromise;

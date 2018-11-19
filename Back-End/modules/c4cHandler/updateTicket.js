@@ -1,6 +1,5 @@
 module.exports = function (ID, data, token) {
-    const tool = require('../Tools');
-    const rp = tool.requestPromise;
+    const rp = require('../requestPromise');
     const getToken = require('./getToken');
     const configData = require('../../config/server.config');
     const getOption = require('./createOptionData');

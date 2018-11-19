@@ -16,6 +16,6 @@ module.exports = function(method, body, param, jar) {
     } else {
         options['body'] = JSON.stringify(body);
     }
-    options['json'] = true;
+    // options['json'] = true;
     return options;
 }
