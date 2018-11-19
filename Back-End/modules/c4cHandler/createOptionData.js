@@ -14,7 +14,7 @@ module.exports = function(method, body, param, jar) {
     if (method == "GET") {
         options.headers["x-csrf-token"] = "fetch";
     } else {
-        options['body'] = body;
+        options['body'] = JSON.stringify(body);
     }
     options['json'] = true;
     return options;

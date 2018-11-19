@@ -140,7 +140,7 @@ export default {
     },
     mounted () {
         // let code = this.$router.query.code;
-        // console.log(this.wxCode);
+        console.log(this.wxCode);
         let loading = this.$loading();
         this.openID = this.common.getOpenID(this.wxCode);
         this.openID.then((id) => {

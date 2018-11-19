@@ -1,5 +1,7 @@
 const configData = require('../../config/server.config');
-const rp = require('request-promise');
+const tool = require('../Tools');
+const rp = tool.requestPromise;
+// const rp = require('request-promise');
 const getOption = require('./createOptionData');
 const getActivityData = function (ID,ObjectID,res) {
     if(ID || ID.length>0) {
@@ -9,16 +11,16 @@ const getActivityData = function (ID,ObjectID,res) {
     }
     let options = getOption('GET', '', queryParam, false);
     rp(options).then((data) => {
-        if(data.d.results[0]) {
-            let ServiceRequestDoc = data.d.results[0].ServiceRequestBusinessTransactionDocumentReference;
+        if(data.body.d.results[0]) {
+            let ServiceRequestDoc = data.body.results[0].ServiceRequestBusinessTransactionDocumentReference;
             if (ServiceRequestDoc.length > 0) {
                 let SocialMedia = ServiceRequestDoc.find((elem) => (elem.TypeCode == '1607'));
                 if (SocialMedia) {
                     let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + SocialMedia.ID + "\'";
                     let options = getOption('GET', '', queryParam, false);
                     rp(options).then((data) => {
-                        if (data.d.results[0]) {
-                            let SocialMediaActivity = data.d.results[0];
+                        if (data.body.results[0]) {
+                            let SocialMediaActivity = data.body.d.results[0];
                             res(SocialMediaActivity);
                         } else {
                             res(undefined)

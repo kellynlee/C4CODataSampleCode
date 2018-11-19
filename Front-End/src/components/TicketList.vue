@@ -65,20 +65,23 @@ import TicketListItem from './TicketListItem';
                 }
                 this.loading = true;
                 this.key += 10;
-                this.$axios({
-                    method: 'post',
-                    url: this.CONFIG.url.getTicketList,
-                    data: {
-                        key: this.key
-                    }
-                }).then((res) => {
-                    this.loading = false
-                    if (res.data.length > 0) {
-                        this.ticketList = this.ticketList.concat(res.data);
-                    } else {
-                        this.$toast.error('No more ticket!')
-                    }
-                })
+                this.openID.then((id) => {
+                    this.$axios({
+                        method: 'post',
+                        url: this.CONFIG.url.getTicketList,
+                        data: {
+                            key: this.key,
+                            openID: id
+                        }
+                    }).then((res) => {
+                        this.loading = false
+                        if (res.data.length > 0) {
+                            this.ticketList = this.ticketList.concat(res.data);
+                        } else {
+                            this.$toast.error('No more ticket!');
+                        }
+                    })
+                });
             },
         },
         mounted() {

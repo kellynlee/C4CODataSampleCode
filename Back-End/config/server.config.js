@@ -23,6 +23,7 @@ const codeCollection = {
     providerID:'WXOData',
     SMUPCategoryCode: '02',
     SMACategoryCode: '001',
+    ResponseCategoryCode: '004',
     roleCode: 'BUP001',
     BPCategoryCode: '1',
     wxChannelCode: '008',

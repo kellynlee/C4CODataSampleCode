@@ -170,6 +170,7 @@
                             }
                         }).then((res) => {
                             loading.close();
+                            console.log(res.data)
                             if(res.status == 200) {
                                 this.openDialog = false;
                                 this.$toast.success('Reply successfully!');

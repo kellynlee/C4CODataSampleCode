@@ -13,7 +13,8 @@ const getWxToken = require('./modules/wxHandler/getWeChatToken');
 const configData = require('./config/server.config');
 const createMenu = require('./modules/wxHandler/createMenu');
 const getOption = require('./modules/c4cHandler/createOptionData');
-const rp = require('request-promise');
+// const request = require('request');
+// const rp = require('request-promise');
 const getUserProfile = require('./modules/c4cHandler/getUserProfile');
 const updateTicket = require('./modules/c4cHandler/updateTicket');
 const getToken = require('./modules/c4cHandler/getToken');
@@ -26,6 +27,7 @@ const tools = require('./modules/Tools');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
 const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
+const rp = tools.requestPromise;
 app.use(history({
   htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
 }))
@@ -39,8 +41,8 @@ app.use(express.static(path.join(__dirname, 'views')));
 app.engine('html',ejs.__express);
 app.set('view engine', 'html');
 
-getWxToken().then((data) => {
-  createMenu(data.access_token);
+getWxToken().then((access_token) => {
+  createMenu(access_token);
 });
 
 
@@ -62,22 +64,12 @@ app.get('/wx/c4c',(req, res) => {
       }
     })
   }
-  console.log(req.query.page)
-  if(req.query.page) {
-    res.redirect("/" + req.query.page)
-  }
 });
 
-app.get('/wx/get_access_token', (req, res) => {
-  console.log(req.query.page);
-  if (req.query.page) {
-    res.redirect("/" + req.query.page)
-  }
-});
 
 app.post('/wxJssdk/getJssdk', (req, res) => {
-  getWxToken().then((data) => {
-    getWxJSSDKToken(data.access_token).then((data) => {
+  getWxToken().then((access_token) => {
+    getWxJSSDKToken(access_token).then((data) => {
       let jsapi_ticket = data.token;
       let nonce_str = '123456';
       let timestamp = new Date().getTime();
@@ -99,7 +91,6 @@ app.post('/wxJssdk/getJssdk', (req, res) => {
 });
 
 app.post('/wx/c4c', (req, res) => {
-  var thiz = this;
   if(req.query.signature) {
     wxValidate.signatureValidate(req.query.signature, req.query.timestamp, req.query.nonce).then((data) => {
       console.log(data)
@@ -143,8 +134,6 @@ app.post('/wx/c4c', (req, res) => {
                       })
                     } else {
                       console.log('created')
-                      // store.SocialMediaUserProfileNodeID = data;
-                      // store.openID = userInfo.openid;
                       console.log('success');
                     }
                   })
@@ -160,11 +149,14 @@ app.post('/wx/c4c', (req, res) => {
 });
 
 app.post('/getOpenID', (req, res, next) => {
-  if (req.query.code) {
+  console.log(req.body);
+  if (req.body.code) {
     getOpenID(req.body.code).then((data) => {
+      console.log(data)
       res.send(data);
     });
   } else {
+    console.log('local')
     res.send('oKCV91TySfSQGar2avVhBYEIvC5w');
   }
 });
@@ -305,13 +297,14 @@ app.post('/createTicket', (req, res) => {
       options.headers["x-csrf-token"] = token;
       options.json = true;
       rp(options).then((data) => {
+        console.log(data)
         let ID = data.d.results.ID;
         let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
         let options = getOption('GET', '', queryParam);
         options.json = true;
         console.log('start creating')
         rp(options).then((data) => {
-          // console.log(data.d.results[0]);
+          console.log(data);
           if (data.d.results[0]) {
             // res.send(data.d.results[0]);
             delete ticketInfo.Description;
@@ -340,10 +333,12 @@ app.post('/createTicket', (req, res) => {
           res.status(400);
           res.send();
         })
-      }).catch((err) => {
-        res.status(400);
-        res.send();
       })
+      // .catch((err) => {
+      //   console.log(err)
+      //   res.status(400);
+      //   res.send(err);
+      // })
     } else {
       res.status(400);
       res.send('fail')
@@ -403,8 +398,9 @@ app.post('/getTicket',(req, res) => {
       let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + req.body.ID + "\'&$expand=ServiceRequestServicePointLocation/ServiceRequestServicePointLocationAddress";
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
-        if (data.d.results[0].ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress) {
-          res(data.d.results[0]);
+        console.log(data)
+        if (data.body.d.results[0].ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress) {
+          res(data.body.d.results[0]);
         }
       })
     })
@@ -462,7 +458,7 @@ app.post('/replyMsg', (req, res) => {
       if (data[0] && data[1] && data[2]) {
         let UUID = tools.UUIDEndoce(data[2])
         let body = {
-          CategoryCode: configData.codeCollection.SMACategoryCode,
+          CategoryCode: configData.codeCollection.ResponseCategoryCode,
           SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
           SocialMediaMessageID: new Date().valueOf().toString(),
           InitiatorCode: configData.codeCollection.InitiatorCode,
@@ -474,15 +470,30 @@ app.post('/replyMsg', (req, res) => {
         let queryParam = configData.apiList.SMA;
         let options = getOption('POST', body, queryParam, true);
         options.headers['x-csrf-token'] = data[1];
-        options.json = true;
-        rp(options).then((data) => {
-          if (data.d.results.ObjectID) {
-            res.send();
-          } else {
-            res.status(400);
-            res.send()
-          }
+        // options.json = true;
+        console.log(options)
+        let send= new Promise((res, rej) => {
+          request(options, function(error, response, body) {
+            console.log(body)
+              if (!error && response.statusCode == 200) {
+                res(body)
+                  console.log(body) // 请求成功的处理逻辑
+              }
+          });
         })
+        send.then((data) => {
+          res.send(data)
+        })
+        // rp(options).then((data) => {
+        //   console.log(data);
+        //   res.send(data)
+        //   // if (data.d.results.ObjectID) {
+        //   //   res.send();
+        //   // } else {
+        //   //   res.status(400);
+        //   //   res.send()
+        //   // }
+        // })
       }
     })
   }

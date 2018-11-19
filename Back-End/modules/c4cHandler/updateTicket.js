@@ -1,5 +1,6 @@
 module.exports = function (ID, data, token) {
-    const rp = require('request-promise');
+    const tool = require('../Tools');
+    const rp = tool.requestPromise;
     const getToken = require('./getToken');
     const configData = require('../../config/server.config');
     const getOption = require('./createOptionData');
@@ -12,7 +13,7 @@ module.exports = function (ID, data, token) {
         options.headers["x-csrf-token"] = token;
         options.json = true;
         rp(options).then((data) => {
-            res(data);
+            res(data.body);
         })
     })
 }

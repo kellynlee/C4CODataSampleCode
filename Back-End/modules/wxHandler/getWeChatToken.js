@@ -24,7 +24,7 @@ module.exports = function () {
                 if (data["access_token"]) {
                     tokenStore.wxToken["access_token"] = data["access_token"];
                     tokenStore.wxToken["expire"] = new Date().valueOf() + 7200000;
-                    res(tokenStore.wxToken);
+                    res(tokenStore.wxToken["access_token"]);
                 }
             })
         } else {

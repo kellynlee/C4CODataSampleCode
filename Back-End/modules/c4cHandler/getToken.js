@@ -1,3 +1,5 @@
+const tool = require('../Tools');
+const rp = tool.requestPromise;
 module.exports = function () {
     const rp = require('request-promise');
     var token;

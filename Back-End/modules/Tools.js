@@ -1,3 +1,5 @@
+const request = require('request');
+
 const UUIDEndoce = function (ID) {
     return ID.slice(0,8) +"-"+ ID.slice(8,12) + "-"+ ID.slice(12,16) + "-" + ID.slice(16,20) + "-" + ID.slice(20,ID.length);
 }
@@ -28,5 +30,14 @@ const DateFormatter = function (date) {
     return formattedDate;
 }
 
+const requestPromise = function (options) {
+    return new Promise((res, rej) => {
+        request(options,function(error, response, body) {
+            res(response)
+        })
+    })
+};
+
 exports.UUIDEndoce = UUIDEndoce;
 exports.DateFormatter = DateFormatter;
+exports.requestPromise = requestPromise;
