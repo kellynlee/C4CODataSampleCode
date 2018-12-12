@@ -90,27 +90,45 @@ export default {
                         if (result) {
                             var loading = this.$loading();
                             thiz.isQuery = true;
-                            this.openID.then((id) => {
+                            this.WXUserInfo.then((userInfo) => {
                                 thiz.$axios({
                                     method: 'post',
                                     url: this.CONFIG.url.getContactCollection,
                                     data: {
-                                        openID: id,
+                                        openID: userInfo.openid,
+                                        nickName: userInfo.nickname,
+                                        headImageUrl: userInfo.headimgurl,
                                         phone: this.formData.phone
                                     }
                                 }).then((res => {
                                     thiz.isQuery = false;
-                                    loading.close();
                                     console.log(res)
                                     if(res.data.isCreated) {
                                         thiz.$toast.success('Success');
-                                    } else if (res.data.d.results.length > 0) {
+                                        this.$axios({
+                                            method:'post',
+                                            url: this.CONFIG.url.getSMUP,
+                                            data: {
+                                                openID: userInfo.openid
+                                            }
+                                        }).then((res) => {
+                                            loading.close();
+                                            if (res.data) {
+                                                this.contactDetail = res.data;
+                                                this.isLinked = true
+                                            }
+                                        })
+                                    } else if (res.data.length > 0) {
+                                        loading.close();
                                         thiz.$toast.success('Success');
-                                        thiz.contactList = res.data.d.results.concat();
+                                        thiz.contactList = res.data.concat();
                                     } else {
                                         thiz.$toast.error('No Contact Found');
                                     }
-                                }))
+                                })).catch((err) => {
+                                    loading.close();
+                                    thiz.$toast.error('Create Failed');
+                                })
                             })
                         }
                     })
@@ -120,17 +138,28 @@ export default {
         createBP: function () {
             var thiz = this;
             var UUID = this.selectedContact.ObjectID.slice(0,8) +"-"+ this.selectedContact.ObjectID.slice(8,12) + "-"+this.selectedContact.ObjectID.slice(12,16) + "-" + this.selectedContact.ObjectID.slice(16,20) + "-" + this.selectedContact.ObjectID.slice(20,this.selectedContact.ObjectID.length);
-            this.openID.then((id) => {
+            var loading = this.$loading();
+            this.WXUserInfo.then((userInfo) => {
                 this.$axios({
                     url: this.CONFIG.url.createBP,
                     method: 'post',
                     data: {
                         UUID: UUID,
-                        openID: id
+                        openID: userInfo.openid,
+                        nickName: userInfo.nickname,
+                        headImageUrl: userInfo.headimgurl,
                     }
                 }).then((res) => {
-                    this.$toast.success('Create Successfully');
-                    thiz.isSelected = false;
+                    loading.close();
+                    if (res.data.isCreated) {
+                        this.$toast.success('Create Successfully');
+                        thiz.isSelected = false;
+                    } else {
+                        throw new Error;
+                    }
+                }).catch((err) => {
+                    loading.close();
+                    thiz.$toast.error('Create Failed');
                 })
             })
         },
@@ -142,13 +171,13 @@ export default {
         // let code = this.$router.query.code;
         console.log(this.wxCode);
         let loading = this.$loading();
-        this.openID = this.common.getOpenID(this.wxCode);
-        this.openID.then((id) => {
+        this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
+        this.WXUserInfo.then((userInfo) => {
             this.$axios({
                 method:'post',
                 url: this.CONFIG.url.getSMUP,
                 data: {
-                    openID: id
+                    openID: userInfo.openid
                 }
             }).then((res) => {
                 loading.close();

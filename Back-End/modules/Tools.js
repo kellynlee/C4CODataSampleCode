@@ -9,7 +9,7 @@ const DateFormatter = function (date) {
     let year = dateObj.getFullYear();
     let month = dateObj.getMonth() < 10? '0' + dateObj.getMonth():dateObj.getMonth();
     let day = dateObj.getDate() < 10? '0' + dateObj.getDate():dateObj.getDate();
-    if (dateObj.getHours() < 12) {
+    if (dateObj.getHours() <= 12) {
         if(dateObj.getHours() < 10) {
             var hour = '0' + dateObj.getHours();
         } else {

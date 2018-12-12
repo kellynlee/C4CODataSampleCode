@@ -15,7 +15,6 @@ const createMenu = require('./modules/wxHandler/createMenu');
 const getOption = require('./modules/c4cHandler/createOptionData');
 const getUserProfile = require('./modules/c4cHandler/getUserProfile');
 const updateTicket = require('./modules/c4cHandler/updateTicket');
-const getToken = require('./modules/c4cHandler/getToken');
 const xml2js = require('xml2js');
 const parser = new xml2js.Parser();
 const getWxUserInfo = require('./modules/wxHandler/getWxUserInfo');
@@ -23,6 +22,7 @@ const getWxJSSDKToken = require('./modules/wxHandler/getWeChatJSSDkToken');
 const crypto = require('crypto');
 const tools = require('./modules/Tools');
 const rp = require('./modules/requestPromise');
+const createSMUPwithBP = require('./modules/c4cHandler/createSMUPwithBP');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
 const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
@@ -88,73 +88,75 @@ app.post('/wxJssdk/getJssdk', (req, res) => {
   });
 });
 
-app.post('/wx/c4c', (req, res) => {
-  if(req.query.signature) {
-    wxValidate.signatureValidate(req.query.signature, req.query.timestamp, req.query.nonce).then((data) => {
-      console.log(data)
-      if (data) {
-        req.on('data', (data) => {
-          parser.parseString(data.toString(), (err, res) => {
-            let body = res.xml;
-            let msg = body.MsgType[0];
-            if(msg === "event") {
-              let event = body.Event[0];
-              if (event === "subscribe") {
-                console.log(body.FromUserName[0]);
-                // thiz.openID = body.FromUserName[0];
-                getWxUserInfo(body.FromUserName[0]).then((data) => {
-                  console.log('got userinfo')
-                  let userInfo = data;
-                  let body = {
-                    "SocialMediaUserCategoryCode": configData.codeCollection.SMUPCategoryCode,
-                    "SocialMediaUserProfileUserInformation":[{
-                      "SocialMediaChannelCode": configData.codeCollection.SocialMediaChannelCode,
-                      "GivenName":userInfo.nickname,
-                      "ExternalPartyAccountID":"0011",
-                      "SocialMediaUserAccountID":userInfo.openid
-                    }]
-                  };
-                  let options = getOption('POST', body, configData.apiList.SMUP, true);
-                  getUserProfile(userInfo.openid,'SocialMediaUserAccountID', 'ObjectID').then((data) => {
-                    if (!data) {
-                      console.log('create new')
-                      getToken().then((data) => {
-                        console.log('gotToken')
-                        options.headers['x-csrf-token'] = data;
-                        options.json = true;
-                        rp(options).then((data) => {
-                          console.log('success');
-                        }).catch((err) => {
-                          console.log(err)
-                        });
-                      }).catch((err) => {
-                        console.log('err1')
-                      })
-                    } else {
-                      console.log('created')
-                      console.log('success');
-                    }
-                  })
-                })
-                return;
-              }
-            }
-          })
-        })
-      }
-    })
-  }
-});
+// app.post('/wx/c4c', (req, res) => {
+//   if(req.query.signature) {
+//     wxValidate.signatureValidate(req.query.signature, req.query.timestamp, req.query.nonce).then((data) => {
+//       console.log(data)
+//       if (data) {
+//         req.on('data', (data) => {
+//           parser.parseString(data.toString(), (err, res) => {
+//             let body = res.xml;
+//             let msg = body.MsgType[0];
+//             if(msg === "event") {
+//               let event = body.Event[0];
+//               if (event === "subscribe") {
+//                 console.log(body.FromUserName[0]);
+//                 // thiz.openID = body.FromUserName[0];
+//                 getWxUserInfo(body.FromUserName[0]).then((data) => {
+//                   console.log('got userinfo')
+//                   let userInfo = data;
+//                   let body = {
+//                     SocialMediaUserCategoryCode: configData.codeCollection.SMUPCategoryCode,
+//                     SocialMediaUserProfileUserInformation:[{
+//                       SocialMediaChannelCode: configData.codeCollection.SocialMediaChannelCode,
+//                       GivenName:userInfo.nickname,
+//                       ExternalPartyAccountID:"0011",
+//                       SocialMediaUserAccountID:userInfo.openid,
+//                       SocialMediaUserName:userInfo.nickname,
+//                       SocialMediaUserImageURI:userInfo.headimgurl
+//                     }]
+//                   };
+//                   let options = getOption('POST', body, configData.apiList.SMUP, true);
+//                   getUserProfile(userInfo.openid,'SocialMediaUserAccountID', 'ObjectID').then((data) => {
+//                     if (!data) {
+//                       console.log('create new')
+//                       rp(options).then((data) => {
+//                         console.log('success');
+//                       }).catch((err) => {
+//                         console.log(err)
+//                       });
+//                     } else {
+//                       console.log('created')
+//                       console.log('success');
+//                     }
+//                   })
+//                 })
+//                 return;
+//               }
+//             }
+//           })
+//         })
+//       }
+//     })
+//   }
+// });
 
 app.post('/getOpenID', (req, res) => {
-  if (req.query.code) {
+  if (req.body.code) {
     getOpenID(req.body.code).then((data) => {
-      console.log(data)
-      res.send(data);
+      getWxUserInfo(data.openid).then((data) => {
+        console.log(data)
+        res.send(data);
+      });
     });
   } else {
-    console.log('local')
-    res.send('oKCV91TySfSQGar2avVhBYEIvC5w');
+    //for local testing
+    console.log('local');
+    res.send({
+      openid: 'oKCV91TySfSQGar2avVhBYEIvC5w',
+      nickname: 'testMan',
+      headimgurl: 'aaa.jpg'
+    });
   }
 });
 
@@ -186,76 +188,70 @@ app.post('/getSMUP', (req, res) => {
 app.post('/getContactCollection',(req, res) => {
   console.log('enter');
   console.log(req.body);
-  let queryParam =configData.apiList.Contact + "?$filter=Phone eq \'*" + req.body.phone + "*\'";
-  let options = getOption('GET', '', queryParam, true);
-  // console.log(options);
   getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID').then((SMUPNodeID) => {
-    rp(options).then((data) => {
-      console.log('success')
-      let contact = data.d.results;
-      if (contact.length == 1) {
-        let ObjectID = contact[0].ObjectID;
-        let UUID = tools.UUIDEndoce(ObjectID);
-        let  body = {
-          ParentObjectID: SMUPNodeID,
-          BusinessPartnerCategoryCode:"1",
-          BusinessPartnerRoleCode:"BUP001",
-          BusinessPartnerUUID:UUID
-        };
-        let options = getOption('POST', body, configData.apiList.BP, true);
-        getToken().then((data) => {
-          options.headers['x-csrf-token'] = data;
-          options.json = true;
-          rp(options).then((data) => {
-            console.log(data);
-            data.isCreated = true;
+    //SMUP should be created with BP together
+    if (!SMUPNodeID) {
+      let queryParam =configData.apiList.Contact + "?$filter=Phone eq \'*" + req.body.phone + "*\'";
+      let options = getOption('GET', '', queryParam, true);
+      rp(options).then((data) => {
+        console.log('found contact')
+        let contact = data.d.results;
+        if (contact.length <= 0) {
+          res.send(contact);
+        } else {
+          if (contact.length == 1) {
+            let ObjectID = contact[0].ObjectID;
+            let UUID = tools.UUIDEndoce(ObjectID);
+            let  BPNode = {
+              BusinessPartnerCategoryCode:"1",
+              BusinessPartnerRoleCode:configData.codeCollection.roleCode,
+              BusinessPartnerUUID:UUID
+            };
+            createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.SocialMediaChannelCode,
+              req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
+                if (data.ObjectID) {
+                  data.isCreated = true;
+                  res.send(data);
+                } else{
+                  throw new Error;
+                }
+              })
+          } else {
             res.status(200);
-            res.send(data);
-          }).catch((err) => {
-            res.status(400);
-            res.send(err);
-          });
-        }).catch((err) => {
-          res.status(400);
-          res.send(err);
-        });
-      } else {
-        res.status(200);
-        res.send(data)
-      }
-    }).catch((err) => {
-      console.log(err);
-      res.status(400);
-      res.send(err)
-    });
+            res.send(contact)
+          }
+        }
+      }).catch((err) => {
+        console.log(err);
+        res.status(400);
+        res.send(err)
+      });
+    }
   })
 });
 
 app.post('/createBP', (req, res) => {
   console.log('start');
-  let token = getToken();
-  let SMUPNodeID = getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID');
-  Promise.all([token, SMUPNodeID]).then((data) => {
-    let token = data[0];
-    let NodeID = data[1];
-    if (token && NodeID) {
-      let  body = {
-        ParentObjectID: NodeID,
+  getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID').then((nodeID) => {
+    let NodeID = nodeID;
+    if (!NodeID) {
+      let  BPNode = {
         BusinessPartnerCategoryCode:"1",
         BusinessPartnerRoleCode:"BUP001",
         BusinessPartnerUUID:req.body.UUID
       };
-      let options = getOption('POST', body, configData.apiList.BP, true);
-      options.headers['x-csrf-token'] = data;
-      options.json = true;
-      rp(options).then((data) => {
-        console.log(data);
-        res.status(200)
-        res.send(data);
-      }).catch((err) => {
-        res.status(400);
-        res.send(err);
-      });
+      createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.SocialMediaChannelCode,
+        req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
+          if (data.ObjectID) {
+            data.isCreated = true;
+            res.send(data);
+          } else {
+            throw new Error;
+          }
+        }).catch((err) => {
+          res.status(400);
+          res.send();
+        })
     } else {
       res.status(400);
       res.send();
@@ -266,18 +262,16 @@ app.post('/createBP', (req, res) => {
 app.post('/createTicket', (req, res) => {
   console.log('start');
   console.log(req.body);
-  // let token = getToken();
   let ticketInfo = {
     Name: req.body.Name,
     Description: req.body.Description,
     SerialID: req.body.SerialID,
     ServicePriorityCode: req.body.ServicePriorityCode,
-    OnSiteArrivalDateTime: req.body.OnSiteArrivalDateTime
+    RequestedFulfillmentPeriodStartDateTime: req.body.RequestedFulfillmentPeriodStartDateTime
   }
   let openID = req.body.openID;
+  let authorName = req.body.nickName;
   getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID').then((result) => {
-    console.log('got smup')
-    console.log(result);
     if (result) {
       let UUID = tools.UUIDEndoce(result);
       let body = {
@@ -287,7 +281,8 @@ app.post('/createTicket', (req, res) => {
         InitiatorCode: configData.codeCollection.InitiatorCode,
         SocialMediaUserProfileUUID: UUID,
         Text: req.body.Description,
-        SocialMediaActivityProviderID: configData.codeCollection.providerID
+        SocialMediaActivityProviderID: configData.codeCollection.providerID,
+        SocialMediaMessageAuthor: authorName
       };
       let options = getOption('POST', body, configData.apiList.SMA, true);
       rp(options).then((data) => {
@@ -300,11 +295,9 @@ app.post('/createTicket', (req, res) => {
         rp(options).then((data) => {
           console.log(data);
           if (data.d.results[0]) {
-            // res.send(data.d.results[0]);
             delete ticketInfo.Description;
             updateTicket(data.d.results[0].ParentObjectID, ticketInfo, result[0]);
             let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
-            // console.log(options);
             options.json = true;
             rp(options).then((data) => {
               res.send(data);
@@ -332,82 +325,18 @@ app.post('/createTicket', (req, res) => {
         res.status(400);
         res.send(err);
       })
+    } else {
+      res.status(400);
+      res.send();
     }
   });
-  // Promise.all([token, SMUPObjectID]).then((result) => {
-  //   console.log(result);
-  //   if (result[0] && result[1]) {
-  //     let token = result[0];
-  //     let UUID = tools.UUIDEndoce(result[1]);
-  //     let body = {
-  //       CategoryCode: configData.codeCollection.SMACategoryCode,
-  //       SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
-  //       SocialMediaMessageID: new Date().valueOf().toString(),
-  //       InitiatorCode: configData.codeCollection.InitiatorCode,
-  //       SocialMediaUserProfileUUID: UUID,
-  //       Text: req.body.Description,
-  //       SocialMediaActivityProviderID: configData.codeCollection.providerID
-  //     };
-  //     let options = getOption('POST', body, configData.apiList.SMA, true);
-  //     options.headers["x-csrf-token"] = token;
-  //     options.json = true;
-  //     rp(options).then((data) => {
-  //       let ID = data.d.results.ID;
-  //       let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
-  //       let options = getOption('GET', '', queryParam);
-  //       options.json = true;
-  //       console.log('start creating')
-  //       rp(options).then((data) => {
-  //         // console.log(data.d.results[0]);
-  //         if (data.d.results[0]) {
-  //           // res.send(data.d.results[0]);
-  //           delete ticketInfo.Description;
-  //           updateTicket(data.d.results[0].ParentObjectID, ticketInfo, result[0]);
-  //           let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
-  //           // console.log(options);
-  //           options.json = true;
-  //           rp(options).then((data) => {
-  //             res.send(data);
-  //             let id = data.d.results.ID;
-  //             let url = '/TicketDetail/' + id;
-  //             let body = {
-  //               openID: openID,
-  //               data: {
-  //                 ID: {
-  //                   value: id,
-  //                   color: '#173177'
-  //                 }
-  //               }
-  //             };
-  //             sendMsg(url, body, configData.templateCollection.ticketNotification);
-  //           })
-  //         }
-  //       }).catch((err) => {
-  //         console.log(err)
-  //         res.status(400);
-  //         res.send();
-  //       })
-  //     }).catch((err) => {
-  //       res.status(400);
-  //       res.send();
-  //     })
-  //   } else {
-  //     res.status(400);
-  //     res.send('fail')
-  //   }
-  // }).catch((err) => {
-  //   res.status(400);
-  //   res.send();
-  // })
 });
 
 app.post('/getTicketList', (req, res) => {
   console.log('enter')
   let key = req.body.key;
   let openID = req.body.openID;
-  console.log(openID)
   getUserProfile(openID,'SocialMediaUserAccountID', 'AccountInternalID').then((id) => {
-    console.log(key)
     if(id) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
       let InternalID = id.replace(reg, "$2");
@@ -415,30 +344,34 @@ app.post('/getTicketList', (req, res) => {
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
         let list = data.d.results;
-        // let channelArray = [];
-        // list.forEach((elem) => {
-        //   let ObjectID = elem.ObjectID;
-        //   var getChannel = new Promise((res,rej) => {
-        //     getSocialMediaActivity('',ObjectID).then((data) => {
-        //       res(data);
-        //     })
-        //   });
-        //   channelArray.push(getChannel);
-        // })
-        // Promise.all(channelArray).then((result) => {
-        //   let i = 0;
-        //   result.forEach((elem) => {
-        //     if (elem) {
-        //       list[i].Channel = elem.SocialMediaActivityProviderName;
-        //     } else {
-        //       list[i].Channel = '';
-        //     }
-        //     i++
-        //   });
-        //   res.send(list)
-        // });
-        res.send(list)
+        let channelArray = [];
+        list.forEach((elem) => {
+          let ObjectID = elem.ObjectID;
+          var getChannel = new Promise((res,rej) => {
+            getSocialMediaActivity('',ObjectID).then((data) => {
+              res(data);
+            })
+          });
+          channelArray.push(getChannel);
+        })
+        Promise.all(channelArray).then((result) => {
+          let i = 0;
+          result.forEach((elem) => {
+            if (elem) {
+              list[i].Channel = elem.SocialMediaActivityProviderName;
+            } else {
+              list[i].Channel = '';
+            }
+            i++
+          });
+          res.send(list)
+        });
+        // res.send(list)
       })
+    } else {
+      console.log('no ticket')
+      res.status(400);
+      res.send('no data');
     }
   })
 });
@@ -450,9 +383,8 @@ app.post('/getTicket',(req, res) => {
       let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + req.body.ID + "\'&$expand=ServiceRequestServicePointLocation/ServiceRequestServicePointLocationAddress";
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
-        console.log(data)
-        if (data.body.d.results[0].ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress) {
-          res(data.body.d.results[0]);
+        if (data.d.results[0].ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress) {
+          res(data.d.results[0]);
         }
       })
     })
@@ -470,7 +402,7 @@ app.post('/getTicket',(req, res) => {
         // } else {
         //   ticketDetail.isOrigin = false;
         // }
-          ticketDetail.isOrigin = true;
+        ticketDetail.isOrigin = true;
       }
       res.send(ticketDetail);
     })
@@ -484,10 +416,9 @@ app.post('/getInteractionHistory', (req, res) => {
     let queryParam = configData.apiList.SocialMediaActivityInteractionHistory + "?RootSocialMediaActivityNodeID=\'" + nodeID + "\'";
     let options = getOption('GET', '', queryParam, false);
     //for local testing in axp2
-    options.uri = "https://axp-cust220.dev.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/GetAllChildSocialMediaActivity?RootSocialMediaActivityNodeID=%2700163E05EC341ED38FB7A26461DBF903%27"
+    // options.uri = "https://axp-cust220.dev.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/GetAllChildSocialMediaActivity?RootSocialMediaActivityNodeID=%2700163E05EC341ED38FB7A26461DBF903%27"
     rp(options).then((data) => {
       if (data.d.results[0]) {
-        console.log(data.d.results[0]);
         res.send(data.d.results)
       }
     })
@@ -497,6 +428,7 @@ app.post('/getInteractionHistory', (req, res) => {
 app.post('/replyMsg', (req, res) => {
   if (req.body.msg) {
     let openID = req.body.openID;
+    let authorName = req.body.nickName;
     let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + req.body.ID + "\'";
     let options = getOption('GET', '', queryParam, true);
     let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID');
@@ -505,47 +437,34 @@ app.post('/replyMsg', (req, res) => {
         res(data.d.results[0].RootSocialMediaActivityUUID);
       })
     });
-    let token = getToken();
-    Promise.all([RootSMAUUID, token, SMUPObjectID]).then((data) => {
-      if (data[0] && data[1] && data[2]) {
-        let UUID = tools.UUIDEndoce(data[2])
+    Promise.all([RootSMAUUID, SMUPObjectID]).then((data) => {
+      if (data[0] && data[1]) {
+        let UUID = tools.UUIDEndoce(data[1])
         let body = {
           CategoryCode: configData.codeCollection.ResponseCategoryCode,
           SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
           SocialMediaMessageID: new Date().valueOf().toString(),
-          InitiatorCode: configData.codeCollection.InitiatorCode,
+          InitiatorCode: configData.codeCollection.InitiatorReplyCode,
           ParentSocialMediaActivityUUID: data[0],
           Text: req.body.msg,
           SocialMediaUserProfileUUID: UUID,
-          SocialMediaActivityProviderID: configData.codeCollection.providerID
+          SocialMediaActivityProviderID: configData.codeCollection.providerID,
+          SocialMediaMessageAuthor: authorName
         };
         let queryParam = configData.apiList.SMA;
         let options = getOption('POST', body, queryParam, true);
-        options.headers['x-csrf-token'] = data[1];
-        // options.json = true;
-        console.log(options)
-        let send= new Promise((res, rej) => {
-          request(options, function(error, response, body) {
-            console.log(body)
-              if (!error && response.statusCode == 200) {
-                res(body)
-                  console.log(body) // 请求成功的处理逻辑
-              }
-          });
-        })
-        send.then((data) => {
-          res.send(data)
-        })
-        // rp(options).then((data) => {
-        //   console.log(data);
-        //   res.send(data)
-        //   // if (data.d.results.ObjectID) {
-        //   //   res.send();
-        //   // } else {
-        //   //   res.status(400);
-        //   //   res.send()
-        //   // }
-        // })
+        console.log(options);
+        rp(options).then((data) => {
+          if (data.d.results.ObjectID) {
+            res.send();
+          } else {
+            res.status(400);
+            res.send()
+          }
+        }).catch((err) => {
+          res.status(400);
+          res.send();
+        });
       }
     })
   }
@@ -607,6 +526,9 @@ app.post('/wechat/c4c/reply', (req, res) => {
           res.send();
         }
       })
+    } else {
+      res.status(400);
+      res.send();
     }
   })
 })

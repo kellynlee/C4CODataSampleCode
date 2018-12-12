@@ -9,7 +9,7 @@
         <component :is="componentId" class="listContent" :detail="ticketDetail" :activity="socialMediaActivity"></component>
         <mu-bottom-nav class="tabBar" :value.sync="componentId">
             <mu-bottom-nav-item title="Detail" icon="details" value="DetailComponent"></mu-bottom-nav-item>
-            <mu-bottom-nav-item title="History" icon="history" value="InteractionComponent"></mu-bottom-nav-item>
+            <mu-bottom-nav-item title="InteractionLog" icon="history" value="InteractionComponent"></mu-bottom-nav-item>
         </mu-bottom-nav>
     </div>
 </template>
@@ -80,7 +80,7 @@
         mounted () {
             // console.log(this.ticketID)
             let loading = this.$loading();
-            this.openID = this.common.getOpenID(this.wxCode);
+            this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
             this.$axios({
                 method: 'post',
                 url: this.CONFIG.url.getTicket,

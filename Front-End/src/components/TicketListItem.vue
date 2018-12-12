@@ -34,7 +34,7 @@
                     <mu-list-item>
                         <mu-list-item-content>
                             <mu-badge :content="ticket.ServiceRequestUserLifeCycleStatusCodeText" color="primary" class="ticketBadge"></mu-badge>
-                            <!-- <mu-badge :content="ticket.Channel"></mu-badge> -->
+                            <mu-badge :content="ticket.Channel"></mu-badge>
                         </mu-list-item-content>
                     </mu-list-item>
                 </mu-list>

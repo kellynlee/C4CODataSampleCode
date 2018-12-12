@@ -9,16 +9,21 @@ const getActivityData = function (ID,ObjectID,res) {
     }
     let options = getOption('GET', '', queryParam, false);
     rp(options).then((data) => {
-        if(data.body.d.results[0]) {
-            let ServiceRequestDoc = data.body.results[0].ServiceRequestBusinessTransactionDocumentReference;
+        if(data.d.results[0]) {
+            let ServiceRequestDoc;
+            if (data.d.results[0].ServiceRequestBusinessTransactionDocumentReference) {
+                ServiceRequestDoc = data.d.results[0].ServiceRequestBusinessTransactionDocumentReference;
+            } else {
+                ServiceRequestDoc = data.d.results;
+            }
             if (ServiceRequestDoc.length > 0) {
                 let SocialMedia = ServiceRequestDoc.find((elem) => (elem.TypeCode == '1607'));
                 if (SocialMedia) {
                     let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + SocialMedia.ID + "\'";
                     let options = getOption('GET', '', queryParam, false);
                     rp(options).then((data) => {
-                        if (data.body.results[0]) {
-                            let SocialMediaActivity = data.body.d.results[0];
+                        if (data.d.results[0]) {
+                            let SocialMediaActivity = data.d.results[0];
                             res(SocialMediaActivity);
                         } else {
                             res(undefined)
@@ -37,7 +42,11 @@ const getActivityData = function (ID,ObjectID,res) {
             //     ticketDetail.isOrigin = true;
             // } else {
             //     ticketDetail.isOrigin = false;
+            } else {
+                res(undefined);
             }
+        } else {
+            res(undefined);
         }
     })
 }

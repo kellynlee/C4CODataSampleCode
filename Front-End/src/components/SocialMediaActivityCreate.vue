@@ -65,21 +65,21 @@ export default {
             if (!this.form.title) {
                 this.$alert('Please input title')
             } else {
-                let loading = this.$loading();
-                this.openID.then((id) => {
+                var loading = this.$loading();
+                this.WXUserInfo.then((userInfo) => {
                     this.$axios({
                         url: this.CONFIG.url.createTicket,
                         data: {
-                            openID: id,
+                            openID: userInfo.openid,
+                            nickName: userInfo.nickname,
                             Name: this.form.title,
                             Description: this.form.description,
                             SerialID: this.form.serialID,
                             ServicePriorityCode: this.form.priority,
-                            OnSiteArrivalDateTime: this.form.date
+                            RequestedFulfillmentPeriodStartDateTime: this.form.date
                         },
                         method: 'post'
                     }).then((res) => {
-                        console.log(res);
                         loading.close();
                         if(res.status == 200) {
                             // thiz.Submit = 'Submit';
@@ -90,6 +90,14 @@ export default {
                                     wx.closeWindow();
                                 })
                             }
+                        }
+                    }).catch((err) => {
+                        loading.close();
+                        this.$toast.error('Please bind Contact first!');
+                        if (isPrd) {
+                            wx.ready(() => {
+                                wx.closeWindow();
+                            })
                         }
                     })
                 })
@@ -116,7 +124,7 @@ export default {
         }).then((data) => {
             console.log(data.data);
             wx.config({
-                debug: true,
+                debug: false,
                 appId: data.data.appId,
                 timestamp: data.data.timestamp,
                 nonceStr: data.data.nonceStr,
@@ -124,7 +132,7 @@ export default {
                 jsApiList: ['closeWindow']
             })
         });
-        this.openID = this.common.getOpenID(this.wxCode);
+        this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
     }
 }
 

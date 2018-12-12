@@ -19,10 +19,9 @@
             </mu-col>
             <mu-col span="2">
                 <mu-flex class="authorBox" direction="column" justify-content="center" align-items="center">
-                    <mu-avatar color="indigo" style="margin-bottom:5px">
+                    <mu-avatar color="indigo" style="margin-bottom:1rem">
                         <mu-icon value="account_circle"></mu-icon>
                     </mu-avatar>
-                    <div style="font-size: 0.75rem">{{ message.SocialMediaMessageAuthor }}</div>
                 </mu-flex>
             </mu-col>
         </mu-row>
@@ -41,7 +40,7 @@
         },
         computed: {
             isInBound () {
-                if (this.message.InitiatorCode == '2') {
+                if (this.message.InitiatorCode != '3') {
                     return true;
                 } else {
                     return false;
@@ -72,6 +71,7 @@
 .inBound {
     background: #4caf50;
     text-align: left;
+    /* line-height: 1px; */
     display: inline-block;
     right: 0;
 }

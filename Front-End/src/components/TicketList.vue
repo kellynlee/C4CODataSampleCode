@@ -65,13 +65,13 @@ import TicketListItem from './TicketListItem';
                 }
                 this.loading = true;
                 this.key += 10;
-                this.openID.then((id) => {
+                this.WXUserInfo.then((userInfo) => {
                     this.$axios({
                         method: 'post',
                         url: this.CONFIG.url.getTicketList,
                         data: {
                             key: this.key,
-                            openID: id
+                            openID: userInfo.openid
                         }
                     }).then((res) => {
                         this.loading = false
@@ -81,29 +81,36 @@ import TicketListItem from './TicketListItem';
                             this.$toast.error('No more ticket!');
                         }
                     })
-                });
+                })
             },
         },
         mounted() {
-            let loading = this.$loading();
-            this.openID = this.common.getOpenID(this.wxCode);
-            this.openID.then((id) => {
+            var loading = this.$loading();
+            this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
+            this.WXUserInfo.then((userInfo) => {
                 this.$axios({
                     method: 'post',
                     url: this.CONFIG.url.getTicketList,
                     data: {
                         key: this.key,
-                        openID: id
+                        openID: userInfo.openid
                     }
                 }).then((res) => {
                     loading.close();
-                    if (res.data.length == 0) {
-                        this.$toast.error('No ticket found!');
-                        return false;
-                    } else {
-                        this.ticketList = this.ticketList.concat(res.data);
+                    if (res.status == 200) {
+                        if (res.data.length == 0) {
+                            this.$toast.error('No ticket found!');
+                            return false;
+                        } else {
+                            this.ticketList = this.ticketList.concat(res.data);
+                        }
+                    }else {
+                            this.$toast.error('Please bind Contact first!');
                     }
-                })
+                }).catch((err) => {
+                    loading.close();
+                    this.$toast.error('No more ticket!');
+                });
             })
         }
     }

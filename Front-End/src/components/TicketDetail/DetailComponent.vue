@@ -39,7 +39,7 @@
                 </mu-list-item>
                 <mu-list-item>
                     <mu-list-item-content>
-                        <mu-list-item-title>Prosser</mu-list-item-title>
+                        <mu-list-item-title>Processor</mu-list-item-title>
                         <mu-list-item-sub-title>{{detail.ProcessorPartyName}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
@@ -159,12 +159,13 @@
             replyMsg: function () {
                 let loading = this.$loading();
                 if (this.msg.length > 0) {
-                    this.$parent.openID.then((id) => {
+                    this.$parent.WXUserInfo.then((userInfo) => {
                         this.$axios({
                             method:'post',
                             url: this.CONFIG.url.replyMsg,
                             data: {
-                                openID: id,
+                                openID: userInfo.openid,
+                                nickname:userInfo.nickname,
                                 msg: this.msg,
                                 ID: this.detail.RootSocialMediaActivity.ID
                             }

@@ -1,7 +1,7 @@
 const config = require('../config/api.config');
 const axios = require('axios');
 export default {
-    getOpenID (code) {
+    getWXUserInfo (code) {
         return new Promise((res, rej) => {
             // console.log(code)
             axios({

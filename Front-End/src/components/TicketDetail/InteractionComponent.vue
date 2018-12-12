@@ -23,20 +23,20 @@
             ChatModule: ChatModule
         },
         mounted () {
-            // let loading = this.$loading();
-            // if(this.activity.ID) {
-            //     this.$axios({
-            //         method: 'post',
-            //         url: this.CONFIG.url.getInteractionHistory,
-            //         data: {
-            //             ObjectID: this.activity.ObjectID
-            //         }
-            //     }).then((res) => {
-            //         loading.close();
-            //         console.log(res)
-            //         this.interaction = res.data.concat();
-            //     })
-            // }
+            let loading = this.$loading();
+            if(this.activity) {
+                this.$axios({
+                    method: 'post',
+                    url: this.CONFIG.url.getInteractionHistory,
+                    data: {
+                        ObjectID: this.activity.ObjectID
+                    }
+                }).then((res) => {
+                    loading.close();
+                    console.log(res)
+                    this.interaction = res.data.concat();
+                })
+            }
         }
     }
 </script>
