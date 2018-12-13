@@ -22,7 +22,7 @@
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>Description</mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.Name}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.Description}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>
@@ -119,7 +119,7 @@
                 </div>
             </mu-flex>
             <mu-dialog title="Reply" width="360" transition="slide-bottom" fullscreen :open.sync="openDialog">
-                <mu-text-field v-model="msg" multi-line :rows="8" :max-length="208" icon="comment"  placeholder="Input Reply Message" full-width style="padding-right: 20px"></mu-text-field><br/>
+                <mu-text-field v-model="msg" multi-line :rows="8" :max-length="280" icon="comment"  placeholder="Input Reply Message" full-width style="padding-right: 20px"></mu-text-field><br/>
                 <mu-button slot="actions" flat color="primary" @click="replyMsg" :disabled="isInputValue">Reply</mu-button>
                 <mu-button slot="actions" flat color="primary" @click="cancel">Cancel</mu-button>
             </mu-dialog>
@@ -165,7 +165,7 @@
                             url: this.CONFIG.url.replyMsg,
                             data: {
                                 openID: userInfo.openid,
-                                nickname:userInfo.nickname,
+                                nickName:userInfo.nickname,
                                 msg: this.msg,
                                 ID: this.detail.RootSocialMediaActivity.ID
                             }

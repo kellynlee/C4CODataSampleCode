@@ -153,7 +153,7 @@ app.post('/getOpenID', (req, res) => {
     //for local testing
     console.log('local');
     res.send({
-      openid: 'oKCV91TySfSQGar2avVhBYEIvC5w',
+      openid: 'oKCV91SVStBmjPnau5tPyk-VDvH0',
       nickname: 'testMan',
       headimgurl: 'aaa.jpg'
     });
@@ -267,7 +267,8 @@ app.post('/createTicket', (req, res) => {
     Description: req.body.Description,
     SerialID: req.body.SerialID,
     ServicePriorityCode: req.body.ServicePriorityCode,
-    RequestedFulfillmentPeriodStartDateTime: req.body.RequestedFulfillmentPeriodStartDateTime
+    RequestedFulfillmentPeriodStartDateTime: req.body.RequestedFulfillmentPeriodStartDateTime,
+    RequestedFulfillmentPeriodStarttimeZoneCode: "GMT"
   }
   let openID = req.body.openID;
   let authorName = req.body.nickName;
@@ -340,7 +341,7 @@ app.post('/getTicketList', (req, res) => {
     if(id) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
       let InternalID = id.replace(reg, "$2");
-      let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$orderby=ServiceRequestUserLifeCycleStatusCode desc&$top=10&$skip=" + key;
+      let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$orderby=ServiceRequestUserLifeCycleStatusCode asc&$top=10&$skip=" + key;
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
         let list = data.d.results;
@@ -369,6 +370,7 @@ app.post('/getTicketList', (req, res) => {
         // res.send(list)
       })
     } else {
+      console.log(openID)
       console.log('no ticket')
       res.status(400);
       res.send('no data');
@@ -402,6 +404,7 @@ app.post('/getTicket',(req, res) => {
         // } else {
         //   ticketDetail.isOrigin = false;
         // }
+        ticketDetail.Description = activity.Text
         ticketDetail.isOrigin = true;
       }
       res.send(ticketDetail);
@@ -449,11 +452,11 @@ app.post('/replyMsg', (req, res) => {
           Text: req.body.msg,
           SocialMediaUserProfileUUID: UUID,
           SocialMediaActivityProviderID: configData.codeCollection.providerID,
-          SocialMediaMessageAuthor: authorName
+          SocialMediaMessageAuthor: req.body.nickName
         };
         let queryParam = configData.apiList.SMA;
         let options = getOption('POST', body, queryParam, true);
-        console.log(options);
+        console.log(options.body);
         rp(options).then((data) => {
           if (data.d.results.ObjectID) {
             res.send();

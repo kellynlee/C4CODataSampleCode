@@ -123,11 +123,12 @@ export default {
                                         thiz.$toast.success('Success');
                                         thiz.contactList = res.data.concat();
                                     } else {
-                                        thiz.$toast.error('No Contact Found');
+                                        loading.close();
+                                        thiz.$alert('No Contact Found');
                                     }
                                 })).catch((err) => {
                                     loading.close();
-                                    thiz.$toast.error('Create Failed');
+                                    thiz.$alert('Create Failed');
                                 })
                             })
                         }
@@ -159,7 +160,7 @@ export default {
                     }
                 }).catch((err) => {
                     loading.close();
-                    thiz.$toast.error('Create Failed');
+                    thiz.$alert('Create Failed');
                 })
             })
         },

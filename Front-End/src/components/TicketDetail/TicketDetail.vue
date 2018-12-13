@@ -65,6 +65,12 @@
             ObjectID () {
                 return this.$route.params.id;
             },
+            userInfo () {
+                return {
+                    openid: this.$route.params.openID,
+                    nickname: this.$route.params.nickName
+                }
+            },
             wxCode () {
                 return this.$route.query.code;
             },
@@ -80,7 +86,13 @@
         mounted () {
             // console.log(this.ticketID)
             let loading = this.$loading();
-            this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
+            if (this.wxCode) {
+                this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
+            } else {
+                this.WXUserInfo = new Promise((res, rej) => {
+                    res(this.userInfo)
+                })
+            }
             this.$axios({
                 method: 'post',
                 url: this.CONFIG.url.getTicket,

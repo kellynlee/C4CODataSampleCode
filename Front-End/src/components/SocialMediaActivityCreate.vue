@@ -93,12 +93,12 @@ export default {
                         }
                     }).catch((err) => {
                         loading.close();
-                        this.$toast.error('Please bind Contact first!');
-                        if (isPrd) {
-                            wx.ready(() => {
-                                wx.closeWindow();
-                            })
-                        }
+                        thiz.$alert('Please bind Contact first!');
+                        // if (isPrd) {
+                        //     wx.ready(() => {
+                        //         wx.closeWindow();
+                        //     })
+                        // }
                     })
                 })
             }

@@ -14,7 +14,7 @@ const getToken = function () {
         })
     })
 };
-setInterval(getToken,5400000);
+setInterval(getToken,7200000);
 
 module.exports = function () {
     return new Promise((res, rej) => {

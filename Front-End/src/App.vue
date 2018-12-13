@@ -1,8 +1,11 @@
 <template>
   <div class="app">
-    <div class="content">
-      <router-view></router-view>
-    </div>
+    <!-- <div class="content"> -->
+      <keep-alive>
+        <router-view v-if="$route.meta.keepAlive"></router-view>
+      </keep-alive>
+      <router-view v-if="!$route.meta.keepAlive"></router-view>
+    <!-- </div> -->
   </div>
 </template>
 

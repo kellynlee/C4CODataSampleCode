@@ -16,6 +16,10 @@ import TicketListItem from './TicketListItem';
     export default {
         data () {
             return {
+                isFirstEnter: false,
+                isNav: false,
+                key:0,
+                userInfo:{},
                 ticketList: [
                     // {
                     //     ID: '1423',
@@ -57,15 +61,60 @@ import TicketListItem from './TicketListItem';
         methods: {
             openTicketDetail: function (id) {
                 console.log(id);
-                this.$router.push('/TicketDetail/' + id);
+                this.isNav = true;
+                this.$router.push({
+                    name:'TicketDetail',
+                    params: {
+                        openID: this.userInfo.openid,
+                        nickName: this.userInfo.nickname,
+                        id: id
+                    }
+                });
             },
             load: function () {
-                if (this.ticketList.length < 10) {
+                if (!this.isNav) {
+                    if (this.ticketList.length < 10) {
+                        return false;
+                    }
+                    this.loading = true;
+                    this.key += 10;
+                    this.WXUserInfo.then((userInfo) => {
+                        this.$axios({
+                            method: 'post',
+                            url: this.CONFIG.url.getTicketList,
+                            data: {
+                                key: this.key,
+                                openID: userInfo.openid
+                            }
+                        }).then((res) => {
+                            this.loading = false
+                            if (res.data.length > 0) {
+                                this.ticketList = this.ticketList.concat(res.data);
+                            } else {
+                                thiz.$alert('No more ticket!');
+                            }
+                        })
+                    })
+                } else {
                     return false;
                 }
-                this.loading = true;
-                this.key += 10;
+            },
+        },
+        beforeRouteEnter(to, from, next) {
+            if (from.name == "TicketDetail") {
+                to.meta.isBack = true;
+            }
+            next();
+        },
+        created() {
+            this.isFirstEnter = true;
+        },
+        activated() {
+            if (!this.$route.meta.isBack || this.isFirstEnter) {
+                var loading = this.$loading();
+                this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
                 this.WXUserInfo.then((userInfo) => {
+                    this.userInfo = userInfo;
                     this.$axios({
                         method: 'post',
                         url: this.CONFIG.url.getTicketList,
@@ -74,44 +123,26 @@ import TicketListItem from './TicketListItem';
                             openID: userInfo.openid
                         }
                     }).then((res) => {
-                        this.loading = false
-                        if (res.data.length > 0) {
-                            this.ticketList = this.ticketList.concat(res.data);
-                        } else {
-                            this.$toast.error('No more ticket!');
+                        loading.close();
+                        if (res.status == 200) {
+                            if (res.data.length == 0) {
+                                thiz.$alert('No ticket found!');
+                                return false;
+                            } else {
+                                this.ticketList = this.ticketList.concat(res.data);
+                            }
                         }
-                    })
+                    }).catch((err) => {
+                        loading.close();
+                        thiz.$alert('Please bind Contact first!');
+                    });
                 })
-            },
-        },
-        mounted() {
-            var loading = this.$loading();
-            this.WXUserInfo = this.common.getWXUserInfo(this.wxCode);
-            this.WXUserInfo.then((userInfo) => {
-                this.$axios({
-                    method: 'post',
-                    url: this.CONFIG.url.getTicketList,
-                    data: {
-                        key: this.key,
-                        openID: userInfo.openid
-                    }
-                }).then((res) => {
-                    loading.close();
-                    if (res.status == 200) {
-                        if (res.data.length == 0) {
-                            this.$toast.error('No ticket found!');
-                            return false;
-                        } else {
-                            this.ticketList = this.ticketList.concat(res.data);
-                        }
-                    }else {
-                            this.$toast.error('Please bind Contact first!');
-                    }
-                }).catch((err) => {
-                    loading.close();
-                    this.$toast.error('No more ticket!');
-                });
-            })
+            }
+            this.$route.meta.isBack = false;
+            this.isFirstEnter = false;
+            this.isNav = false;
+            this.$children[0].$children[0].$el.style.scrollTop = 0;
+            // document.documentElement.scrollTop = 0;
         }
     }
 </script>
