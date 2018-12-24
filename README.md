@@ -26,7 +26,6 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
 - Register a WeChat Official Account with Subsciption Account type from WeChat Open Platform.
 - The related API should have been provided by C4C.
 
-
 ##Integration Process
 ###1. Flow Chart
 ###2. Process Description
@@ -63,7 +62,7 @@ For more detail about how to use OData Service, please refer to the two guides b
 in this case, there are 3 key OData Services are used:
 - SocialMediaUserProfileCollection
    - To create a SMUP with Contact as BP, by posting payload:
-```
+  ```
 {
 	"SocialMediaUserCategoryCode":"02",
 	"SocialMediaUserProfileUserInformation":[{
@@ -87,7 +86,7 @@ By calling this query, C4C will return the SMUP node back.
 
 - SocialMediaActivityCollection
     - When create ticket, please create a SMA at first, to Create a SMA, by posting payload:
-```
+  ```
 {
 	"CategoryCode":"001",
 	"SocialMediaMessageAuthor": WeChat NickName,
@@ -110,7 +109,6 @@ Update ticket by PATCH ticket infomation to ServiceRequestCollection.
     - If you want to get SMA node by using ticket node, for example, if you know the ticket's ObjectID, firstly you need to get ServiceRequestBusinessTransactionDocumentReference bounded in the ticket, then filter node with typecode equals to "1067", the SMA ID will be the node ID.
 
 **Node: the payload only listed key property that required by back-end, for different product requirement, please refer to $metadata for entity's full api**
-
 ####5.2 WeChat Official Account Configure
 Indroduce necessary configuration logic handling between WeChat with Agent Server, for more detail, please refer to [WeChat Official Account Development Guide](https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1445241432)
 - Handle *access_token* of official account API
