@@ -33,7 +33,7 @@
                 <mu-list>
                     <mu-list-item>
                         <mu-list-item-content>
-                            <mu-badge :content="ticket.ServiceRequestUserLifeCycleStatusCodeText" color="primary" class="ticketBadge"></mu-badge>
+                            <mu-badge :content="ServiceRequestUserLifeCycleStatusCodeText" color="primary" class="ticketBadge"></mu-badge>
                             <mu-badge :content="ticket.Channel"></mu-badge>
                         </mu-list-item-content>
                     </mu-list-item>
@@ -53,6 +53,15 @@
         props: {
             ticket:{
                 type: Object
+            }
+        },
+        computed: {
+            ServiceRequestUserLifeCycleStatusCodeText () {
+                if (this.ticket.ServiceRequestUserLifeCycleStatusCodeText.indexOf("In Process") != -1) {
+                    return "In Process"
+                } else {
+                    return this.ticket.ServiceRequestUserLifeCycleStatusCodeText
+                }
             }
         }
     }

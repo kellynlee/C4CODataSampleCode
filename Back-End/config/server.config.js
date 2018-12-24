@@ -1,4 +1,4 @@
-const proxyUrl = "https://my310266.vlab.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/";
+const proxyUrl = "https://my306768.vlab.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/";
 
 const host = 'https://c4codatasample.cfapps.us10.hana.ondemand.com';
 
@@ -14,13 +14,13 @@ const apiList = {
     SocialMediaActivityInteractionHistory: 'GetAllChildSocialMediaActivity',
 };
 const authorization = {
-    Username: "crmops",
-    Password: "Ondemand1"
+    Username: "Administration01",
+    Password: "Welcome1"
 };
 
 const codeCollection = {
     typeCode: '1607',
-    providerID:'WX_Test',
+    providerID:'WXOData',
     SMUPCategoryCode: '02',
     SMACategoryCode: '001',
     ResponseCategoryCode: '003',

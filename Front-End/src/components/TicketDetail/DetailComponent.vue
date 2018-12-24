@@ -88,7 +88,7 @@
                 <mu-list-item>
                     <mu-list-item-content>
                         <mu-list-item-title>State: </mu-list-item-title>
-                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.State}}</mu-list-item-sub-title>
+                        <mu-list-item-sub-title>{{detail.ServiceRequestServicePointLocation.ServiceRequestServicePointLocationAddress.StateText}}</mu-list-item-sub-title>
                     </mu-list-item-content>
                 </mu-list-item>
                 <mu-list-item>

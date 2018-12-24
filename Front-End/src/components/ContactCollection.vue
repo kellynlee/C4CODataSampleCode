@@ -3,11 +3,11 @@
         <div v-if="!isLinked">
             <mu-form ref='form' :model="formData" :label-width="80">
                 <mu-form-item prop="phone" label="Phone" :rules="inputValidator">
-                    <mu-text-field v-model="formData.phone" prop="phone"></mu-text-field>
+                    <mu-text-field v-model="formData.phone" prop="phone" :max-length="11"></mu-text-field>
                 </mu-form-item>
                 <mu-form-item>
                     <mu-button color="primary" @click="submitData" data-mu-loading-size="24" class="button" :disabled="isClick" v-loading="isClick">Submit</mu-button>
-                    <mu-button @click="cancelInput" class="button">Cancel</mu-button>
+                    <mu-button @click="cancelInput" class="button">Reset</mu-button>
                 </mu-form-item>
             </mu-form>
             <mu-paper class="paper" :z-depth="4">
@@ -49,7 +49,9 @@ export default {
     data () {
         return {
             inputValidator :[
-            { validate: (val) => !!val, message: 'Please input phone number' }
+            { validate: (val) => !!val, message: "Phone Numer Shouldn\'t be Empty" },
+            { validate: (val) => /^[0-9]*$/.test(val), message: 'Please Input Number' },
+            { validate: (val) => val.length ==11 , message: 'Phone Number Should be 11 Degits' }
             ],
             formData: {
             phone:''
@@ -80,11 +82,7 @@ export default {
             let numValidate = /^[0-9]*$/;
             this.$refs.form.validate().then((result) => {
                 if (!result) {
-                    thiz.$alert('Please input phone', 'Alert');
-                } else if(!numValidate.test(thiz.formData.phone)) {
-                    thiz.$alert('Please input number', 'Alert');
-                } else if (thiz.formData.phone.length<11) {
-                    thiz.$alert('Please input valid phone number')
+                    return false
                 } else {
                     thiz.$confirm('Confirm your information?', 'Confirm').then(({ result }) => {
                         if (result) {
@@ -117,6 +115,9 @@ export default {
                                                 this.contactDetail = res.data;
                                                 this.isLinked = true
                                             }
+                                        }).catch((err) => {
+                                            loading.close();
+                                            thiz.$alert('Error');
                                         })
                                     } else if (res.data.length > 0) {
                                         loading.close();

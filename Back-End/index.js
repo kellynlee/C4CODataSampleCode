@@ -153,7 +153,7 @@ app.post('/getOpenID', (req, res) => {
     //for local testing
     console.log('local');
     res.send({
-      openid: 'oKCV91SVStBmjPnau5tPyk-VDvH0',
+      openid: 'oKCV91TySfSQGar2avVhBYEIvC5w',
       nickname: 'testMan',
       headimgurl: 'aaa.jpg'
     });
@@ -208,7 +208,7 @@ app.post('/getContactCollection',(req, res) => {
               BusinessPartnerUUID:UUID
             };
             createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.SocialMediaChannelCode,
-              req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
+              configData.codeCollection.providerID, req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
                 if (data.ObjectID) {
                   data.isCreated = true;
                   res.send(data);
@@ -394,7 +394,9 @@ app.post('/getTicket',(req, res) => {
       let activity = result[0];
       let ticketDetail = result[1];
       if (ticketDetail) {
-        ticketDetail.RequestedFulfillmentPeriodStartDateTime = tools.DateFormatter(ticketDetail.RequestedFulfillmentPeriodStartDateTime);
+        if (ticketDetail.RequestedFulfillmentPeriodStartDateTime.length != 0) {
+          ticketDetail.RequestedFulfillmentPeriodStartDateTime = tools.DateFormatter(ticketDetail.RequestedFulfillmentPeriodStartDateTime);
+        }
         ticketDetail.RequestedFulfillmentPeriodEndDateTime = tools.DateFormatter(ticketDetail.RequestedFulfillmentPeriodEndDateTime);
       }
       if (activity) {
@@ -422,7 +424,13 @@ app.post('/getInteractionHistory', (req, res) => {
     // options.uri = "https://axp-cust220.dev.sapbydesign.com/sap/c4c/odata/v1/c4codataapi/GetAllChildSocialMediaActivity?RootSocialMediaActivityNodeID=%2700163E05EC341ED38FB7A26461DBF903%27"
     rp(options).then((data) => {
       if (data.d.results[0]) {
-        res.send(data.d.results)
+        let interactions = data.d.results;
+        if (interactions.length>1) {
+          interactions.sort((a,b)=>{
+            return a.SocialMediaMessageCreationDateTime > b.SocialMediaMessageCreationDateTime
+          });
+        }
+        res.send(interactions)
       }
     })
   }
@@ -521,15 +529,18 @@ app.post('/wechat/c4c/reply', (req, res) => {
               }
             })
           } else {
+            console.log('no smup')
             res.status(400);
             res.send();
           }
         } else {
+          console.log('activity is empty')
           res.status(400);
           res.send();
         }
       })
     } else {
+      console.log('no acticity')
       res.status(400);
       res.send();
     }

@@ -91,7 +91,7 @@ import TicketListItem from './TicketListItem';
                             if (res.data.length > 0) {
                                 this.ticketList = this.ticketList.concat(res.data);
                             } else {
-                                thiz.$alert('No more ticket!');
+                                this.$alert('No more ticket!');
                             }
                         })
                     })
@@ -126,7 +126,7 @@ import TicketListItem from './TicketListItem';
                         loading.close();
                         if (res.status == 200) {
                             if (res.data.length == 0) {
-                                thiz.$alert('No ticket found!');
+                                this.$alert('No ticket found!');
                                 return false;
                             } else {
                                 this.ticketList = this.ticketList.concat(res.data);
@@ -134,7 +134,7 @@ import TicketListItem from './TicketListItem';
                         }
                     }).catch((err) => {
                         loading.close();
-                        thiz.$alert('Please bind Contact first!');
+                        this.$alert('Please bind Contact first!');
                     });
                 })
             }

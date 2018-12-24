@@ -1,10 +1,10 @@
 <template>
     <div class="mainContent">
-        <mu-form :model="form">
-            <mu-form-item label="*Title" prop="title" :rules="validateRules">
+        <mu-form :model="form" ref="form">
+            <mu-form-item label="*Subject" prop="title" :rules="SubjectValidate">
                 <mu-text-field v-model="form.title"></mu-text-field>
             </mu-form-item>
-            <mu-form-item label="Problem Description" prop="description" >
+            <mu-form-item label="*Problem Description" prop="description" :rules="DescriptionValidate">
                 <mu-text-field v-model="form.description"></mu-text-field>
             </mu-form-item>
             <mu-form-item label="SerialID" prop="serialID" >
@@ -20,7 +20,7 @@
             </mu-form-item>
             <mu-form-item>
                 <mu-button class="button" color="primary" @click="submitTicket">{{Submit}}</mu-button>
-                <mu-button class="button" @click="cancelInput">Cancel</mu-button>
+                <mu-button class="button" @click="cancelInput">Reset</mu-button>
             </mu-form-item>
         </mu-form>
     </div>
@@ -42,13 +42,16 @@ export default {
             },
             Submit: 'Submit',
             isSubmit: false,
-            validateRules: [
-                { validate: (val) => !!val, message: 'Please input Title' }
+            SubjectValidate: [
+                { validate: (val) => !!val, message: 'Please Input Subject' }
+            ],
+            DescriptionValidate: [
+                { validate: (val) => !!val, message: 'Please Input Description' }
             ],
             codeOptions: [
-                {code:"1",text:"Very High"},
-                {code:"2",text:"High"},
-                {code:"3",text:"Medium"},
+                {code:"1",text:"Immediate"},
+                {code:"2",text:"Urgent"},
+                {code:"3",text:"Normal"},
                 {code:"7",text:"Low"}
             ],
         }
@@ -62,46 +65,52 @@ export default {
         submitTicket: function() {
             let thiz = this;
             let isPrd =  Object.is(process.env.NODE_ENV, 'production');
-            if (!this.form.title) {
-                this.$alert('Please input title')
-            } else {
-                var loading = this.$loading();
-                this.WXUserInfo.then((userInfo) => {
-                    this.$axios({
-                        url: this.CONFIG.url.createTicket,
-                        data: {
-                            openID: userInfo.openid,
-                            nickName: userInfo.nickname,
-                            Name: this.form.title,
-                            Description: this.form.description,
-                            SerialID: this.form.serialID,
-                            ServicePriorityCode: this.form.priority,
-                            RequestedFulfillmentPeriodStartDateTime: this.form.date
-                        },
-                        method: 'post'
-                    }).then((res) => {
-                        loading.close();
-                        if(res.status == 200) {
-                            // thiz.Submit = 'Submit';
-                            thiz.isSubmit = false;
-                            thiz.$toast.success('Create Successfully');
-                            if (isPrd) {
-                                wx.ready(() => {
-                                    wx.closeWindow();
+            this.$refs.form.validate().then((result) => {
+                if (!result) {
+                    return false
+                } else {
+                    thiz.$confirm('Confirm your information?', 'Confirm').then(({ result }) => {
+                        if (result) {
+                            var loading = this.$loading();
+                            this.WXUserInfo.then((userInfo) => {
+                                this.$axios({
+                                    url: this.CONFIG.url.createTicket,
+                                    data: {
+                                        openID: userInfo.openid,
+                                        nickName: userInfo.nickname,
+                                        Name: this.form.title,
+                                        Description: this.form.description,
+                                        SerialID: this.form.serialID,
+                                        ServicePriorityCode: this.form.priority,
+                                        RequestedFulfillmentPeriodStartDateTime: this.form.date
+                                    },
+                                    method: 'post'
+                                }).then((res) => {
+                                    loading.close();
+                                    if(res.status == 200) {
+                                        // thiz.Submit = 'Submit';
+                                        thiz.isSubmit = false;
+                                        thiz.$toast.success('Create Successfully');
+                                        if (isPrd) {
+                                            wx.ready(() => {
+                                                wx.closeWindow();
+                                            })
+                                        }
+                                    }
+                                }).catch((err) => {
+                                    loading.close();
+                                    thiz.$alert('Please bind Contact first!');
+                                    // if (isPrd) {
+                                    //     wx.ready(() => {
+                                    //         wx.closeWindow();
+                                    //     })
+                                    // }
                                 })
-                            }
+                            })
                         }
-                    }).catch((err) => {
-                        loading.close();
-                        thiz.$alert('Please bind Contact first!');
-                        // if (isPrd) {
-                        //     wx.ready(() => {
-                        //         wx.closeWindow();
-                        //     })
-                        // }
                     })
-                })
-            }
+                }
+            });
         },
         cancelInput: function () {
             this.form = {

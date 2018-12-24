@@ -26,7 +26,7 @@ const DateFormatter = function (date) {
     }
     let min = dateObj.getMinutes() < 10? '0' + dateObj.getMinutes():dateObj.getMinutes();
     // let sec = dateObj.getSeconds() < 10? '0' + date.getSeconds():dateObj.getSeconds();
-    let formattedDate = month + '/' + day + '/' + year + ' ' + hour + ':' + min + flag;
+    let formattedDate = (month+1) + '/' + day + '/' + year + ' ' + hour + ':' + min + flag;
     return formattedDate;
 }
 

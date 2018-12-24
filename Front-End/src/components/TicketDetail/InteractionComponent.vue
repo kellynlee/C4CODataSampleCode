@@ -43,7 +43,9 @@
 
 <style scoped>
 .chatContainer {
+    position:relative;
     padding:0 10px;
+    margin: 0.75rem;
 }
 </style>
 
