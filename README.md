@@ -3,7 +3,6 @@
 This document provides you an example to connect SAP Cloud for Customer (C4C) tenant and WeChat based on a B2B service integration scenario
 
 **Note: In actual procductive development, you can choose variety of cloud platforms for Agent Server deployment, in C4C Agent Server Accelerator we use SAP Cloud Platform(SCP) as a reference**
-
 ## Bussiness Backgound
 
 Assume your company is dealing with business customers. Your customers can associate the WeChat account with contact of account, and then directly create Cloud for Customer service tickets from WeChat, they can have asynchronized social interaction with the service agent from the WeChat about the tickets they have created.  Your service agents can also give asynchronized respond to WeChat from Cloud for Customer service ticket.
@@ -13,8 +12,8 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
 - Check Ticket List and Ticket Detail
 - Check Social Interaction about ticket
 - Send and recieve message about ticket via WeChat
-
 ## Prerequisites
+
 - Build up an intermediary app server, AKA Agent Server, this server is to process logic handling about WeChat between C4C.
 
 *Note: the scenario in this case is based on OData Service*
@@ -25,8 +24,8 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
     - C4C admin user
 - Register a WeChat Official Account with Subsciption Account type from WeChat Open Platform.
 - The related API should have been provided by C4C.
-
 ##Integration Process
+
 ###1. Flow Chart
 ###2. Process Description
 - User follow WeChat Official Account, open Contact Page, enter Contact's phone number, if there is Contact according to the phone number, create SocialMediaUserProfile using WeChat User's information and associate Contact as BusinessPartner(BP).
@@ -62,7 +61,7 @@ For more detail about how to use OData Service, please refer to the two guides b
 in this case, there are 3 key OData Services are used:
 - SocialMediaUserProfileCollection
    - To create a SMUP with Contact as BP, by posting payload:
-  ```
+```
 {
 	"SocialMediaUserCategoryCode":"02",
 	"SocialMediaUserProfileUserInformation":[{
@@ -86,7 +85,7 @@ By calling this query, C4C will return the SMUP node back.
 
 - SocialMediaActivityCollection
     - When create ticket, please create a SMA at first, to Create a SMA, by posting payload:
-  ```
+```
 {
 	"CategoryCode":"001",
 	"SocialMediaMessageAuthor": WeChat NickName,
@@ -130,9 +129,8 @@ Call the API of WeChat official account with POST mode ( use https as protocol)
 `https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN`
 `ACCESS_TOKEN`is the token stored in server in previous steps. 
 Detail please refer to[WeChat Official Account Development Guide](https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1445241432)
-
-
 ## Project Description
+
 This project contains two parts, Front-End(H5 Page) and Back-End(Agent Server).
 The technical stack using for this project is: `Vue.js + Nodejs`.
 - How to Run(Local)
@@ -176,7 +174,7 @@ Path|Page
 3. Upload Back-End file into Cloud Platform
 
 *Please follow these steps every time you want to deploy Agent Server into Cloud Platform*
-
 ##Disclaimer
+
 Any software coding and/or code snippets are examples. They are not for productive use. The example code is only intended to better explain and visualize the syntax and phrasing rules. SAP does not warrant the correctness and completeness of the example code. SAP shall not be liable for errors or damages caused by the use of example code unless damages have been caused by SAP's gross negligence or wilful misconduct.
 
