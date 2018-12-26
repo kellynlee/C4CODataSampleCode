@@ -423,42 +423,38 @@ app.post('/wechat/c4c/reply', (req, res) => {
     openID: ''
   }
   let url = '/TicketDetail/' + reply.service_req_no;
-  getSocialMediaActivity(ticketID).then((data) => {
-    if (data) {
-      let SMAID = data.ID;
-      let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + SMAID + "\'";
-      let options = getOption('GET', '', queryParam, false);
-      rp(options).then((data) => {
-        if (data.d.results[0]) {
-          let SocialMediaUserProfileUUID = data.d.results[0].SocialMediaUserProfileUUID;
-          if (SocialMediaUserProfileUUID) {
-            let ObjectID = SocialMediaUserProfileUUID.replace(new RegExp(/-/g),'');
-            let queryParam = configData.apiList.SMUP + "(\'" + ObjectID + "\')/SocialMediaUserProfileUserInformation";
-            let options = getOption('GET', '', queryParam, false);
-            rp(options).then((data) => {
-              if (data.d.results[0]) {
-                let openID = data.d.results[0].SocialMediaUserAccountID;
-                if (openID) {
-                  replyMsg.openID = openID;
-                  sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification);
-                  res.status(200);
-                  res.send();
-                }
+  let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + ticketID + "\'";
+  let options = getOption('GET', '', queryParam, false);
+  rp(options).then((data) => {
+    if (data.d.results[0]) {
+      let contactID = data.d.results[0].BuyerMainContactPartyID;
+      getUserProfile(contactID,"BusinessPartnerInternalID","ObjectID").then((objectID)=> {
+        if(objectID) {
+          let queryParam = configData.apiList.SMUP + "(\'" + objectID + "\')/SocialMediaUserProfileUserInformation";
+          let options = getOption('GET', '', queryParam, false);
+          rp(options).then((data) => {
+            if (data.d.results[0]) {
+              let openID = data.d.results[0].SocialMediaUserAccountID;
+              if (openID) {
+                replyMsg.openID = openID;
+                sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification);
+                res.status(200);
+                res.send();
               }
-            })
-          } else {
-            res.status(400);
-            res.send();
-          }
+            } else {
+              throw new Error;
+            }
+          })
         } else {
-          res.status(400);
-          res.send();
+          throw new Error;
         }
       })
     } else {
-      res.status(400);
-      res.send();
+      throw new Error;
     }
+  }).catch((err) => {
+    res.status(400);
+    res.send();
   })
 })
 
