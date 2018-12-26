@@ -39,7 +39,13 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
 ### 3. Configure in C4C
 - Create Mashup Service
 Mashup Service is used to interaction with the Agent Server, for example, sending message to Agent Server when Administrator reply for ticket.
-- Create New Channel with typr "WeChat"
+    - Navigate to Administrator Service
+    - Click Business Flexibility->Mashup Web Services
+    - Click New->REST Service
+    - Enter Service Name, Select 'POST' as HTTP Method,'Form' as Content Type.
+    - Enter URL(`<Your cloud server address> + API`, E.g. https://xxxxxxxxxx.com/wechat/c4c/reply)
+    - Save your options.
+- Create New Channel with type "WeChat"
 This channel is the representation of related official account in C4C.
 Please follow the below steps:
     - Navigate to Administrator Service and Social Settings Social Media Channels.
@@ -92,7 +98,7 @@ By calling this query, C4C will return the SMUP node back.
 	"CategoryCode":"001",
 	"SocialMediaMessageAuthor": WeChat NickName,
 	"SocialMediaChannelCode":"008",
-	"SocialMediaMessageID": Generate randomly,
+	"SocialMediaMessageID": randomly generate,
 	"InitiatorCode":"2",
 	"SocialMediaUserProfileUUID":SMUP's ObjectID,
     "Text": problem discription of ticket,
