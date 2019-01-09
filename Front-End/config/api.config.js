@@ -10,7 +10,8 @@ const URL = {
     replyMsg: HOST + '/replyMsg',
     getSMUP: HOST + '/getSMUP',
     getOpenID: HOST + '/getOpenID',
-    getInteractionHistory: HOST + '/getInteractionHistory'
+    getInteractionHistory: HOST + '/getInteractionHistory',
+    getRegisteredProduct: HOST + '/getRegisteredProduct'
 }
 
 module.exports = {

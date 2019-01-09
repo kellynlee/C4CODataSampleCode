@@ -7,8 +7,14 @@
             <mu-form-item label="*Problem Description" prop="description" :rules="DescriptionValidate">
                 <mu-text-field v-model="form.description"></mu-text-field>
             </mu-form-item>
-            <mu-form-item label="SerialID" prop="serialID" >
-                <mu-text-field v-model="form.serialID"></mu-text-field>
+            <mu-form-item label="SerialID" prop="serialID" :rules="SerialIDValidate">
+                <mu-text-field v-model="form.serialID" style="width: 80%"></mu-text-field>
+                <mu-button color="primary" v-loading="isClick" data-mu-loading-size="24" overlayColor="rgba(0,0,0,.87)" :ripple = "false" :flat = "true" small @click="registeredProductCompletion" style="min-width:20%; margin-right:0; margin-left:0">
+                    <mu-icon value="search"></mu-icon>
+                </mu-button>
+            </mu-form-item>
+            <mu-form-item label="ProductID" ref="productID" prop="productID" :rules="ProductValidate">
+                <mu-text-field v-model="form.productID"></mu-text-field>
             </mu-form-item>
             <mu-form-item label="Priority" prop="priority" >
                 <mu-select v-model="form.priority" @change="ChangeSelect">
@@ -37,9 +43,11 @@ export default {
                 title: '',
                 description:'',
                 serialID:'',
+                productID:'',
                 priority:'',
                 date:''
             },
+            isClick: false,
             Submit: 'Submit',
             isSubmit: false,
             SubjectValidate: [
@@ -47,6 +55,9 @@ export default {
             ],
             DescriptionValidate: [
                 { validate: (val) => !!val, message: 'Please Input Description' }
+            ],
+            SerialIDValidate: [
+                {validate: (val) => /^[0-9a-zA-Z]+$/.test(val) || val == "", message:'SerialID hould be letter and number'}
             ],
             codeOptions: [
                 {code:"1",text:"Immediate"},
@@ -59,9 +70,45 @@ export default {
     computed: {
         wxCode () {
             return this.$route.query.code;
+        },
+        ProductValidate() {
+            let validate = [{validate: (val) => !!val, message: 'Please Input ProductID'}];
+            if (this.form.serialID.length > 0) {
+                return validate
+            } else {
+                if (this.$refs.productID) {
+                    this.$refs.productID.errorMessage = "";
+                }
+            }
         }
     },
     methods: {
+        registeredProductCompletion: function() {
+            this.WXUserInfo.then((userInfo) => {
+                this.isClick = true;
+                this.$axios({
+                    url: this.CONFIG.url.getRegisteredProduct,
+                    data: {
+                        openID: userInfo.openid,
+                        SerialID: this.form.serialID,
+                    },
+                    method: 'post'
+                }).then((res) => {
+                    this.isClick = false;
+                    if(res.status == 200) {
+                        this.form.productID = res.data;
+                    }
+                }).catch((err) => {
+                    this.isClick = false
+                    this.$alert(err.response.data);
+                    // if (isPrd) {
+                    //     wx.ready(() => {
+                    //         wx.closeWindow();
+                    //     })
+                    // }
+                })
+            })
+        },
         submitTicket: function() {
             let thiz = this;
             let isPrd =  Object.is(process.env.NODE_ENV, 'production');
@@ -81,6 +128,7 @@ export default {
                                         Name: this.form.title,
                                         Description: this.form.description,
                                         SerialID: this.form.serialID,
+                                        ProductID: this.form.productID,
                                         ServicePriorityCode: this.form.priority,
                                         RequestedFulfillmentPeriodStartDateTime: this.form.date
                                     },
@@ -99,7 +147,7 @@ export default {
                                     }
                                 }).catch((err) => {
                                     loading.close();
-                                    thiz.$alert('Please bind Contact first!');
+                                    thiz.$alert(err.response.data);
                                     // if (isPrd) {
                                     //     wx.ready(() => {
                                     //         wx.closeWindow();
@@ -113,10 +161,12 @@ export default {
             });
         },
         cancelInput: function () {
+            this.$refs.form.clear();
             this.form = {
                 title: '',
                 description:'',
                 serialID:'',
+                productID:'',
                 priority:'',
                 date:''
             }

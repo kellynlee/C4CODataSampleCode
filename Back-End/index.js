@@ -26,6 +26,7 @@ const createSMUPwithBP = require('./modules/c4cHandler/createSMUPwithBP');
 const sendMsg = require('./modules/wxHandler/sendMsg');
 const getOpenID = require('./modules/wxHandler/getOpenID');
 const getSocialMediaActivity = require('./modules/c4cHandler/getSocialMediaActivity');
+const getProductVerification = require('./modules/c4cHandler/ProductVerification');
 app.use(history({
   htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']
 }))
@@ -95,7 +96,7 @@ app.post('/getOpenID', (req, res) => {
     //for local testing
     console.log('local');
     res.send({
-      openid: '123456',
+      openid: 'oKCV91TySfSQGar2avVhBYEIvC5w',
       nickname: 'testMan',
       headimgurl: 'aaa.jpg'
     });
@@ -103,10 +104,10 @@ app.post('/getOpenID', (req, res) => {
 });
 
 app.post('/getSMUP', (req, res) => {
-  getUserProfile(req.body.openID,'SocialMediaUserAccountID', 'AccountInternalID').then((data) => {
-    if(data) {
+  getUserProfile(req.body.openID,'SocialMediaUserAccountID').then((SMUP) => {
+    if(SMUP) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
-      let ContactID = data.replace(reg, "$2");
+      let ContactID = SMUP.AccountInternalID.replace(reg, "$2");
       let queryParam = configData.apiList.Contact + "?$filter=ContactID eq \'" + ContactID +"\'";
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
@@ -123,10 +124,10 @@ app.post('/getSMUP', (req, res) => {
   })
 })
 
-app.post('/getContactCollection',(req, res) => {
-  getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID').then((SMUPNodeID) => {
+app.post('/getContactCollection',(req, res, next) => {
+  getUserProfile(req.body.openID, 'SocialMediaUserAccountID').then((SMUP) => {
     //SMUP should be created with BP together
-    if (!SMUPNodeID) {
+    if (!SMUP) {
       let queryParam =configData.apiList.Contact + "?$filter=Phone eq \'*" + req.body.phone + "*\'";
       let options = getOption('GET', '', queryParam, true);
       rp(options).then((data) => {
@@ -157,17 +158,16 @@ app.post('/getContactCollection',(req, res) => {
           }
         }
       }).catch((err) => {
-        res.status(400);
-        res.send(err)
+        err.status = 400;
+        next(err);
       });
     }
   })
 });
 
-app.post('/createBP', (req, res) => {
-  getUserProfile(req.body.openID, 'SocialMediaUserAccountID', 'ObjectID').then((nodeID) => {
-    let NodeID = nodeID;
-    if (!NodeID) {
+app.post('/createBP', (req, res, next) => {
+  getUserProfile(req.body.openID, 'SocialMediaUserAccountID').then((SMUP) => {
+    if (!SMUP) {
       let  BPNode = {
         BusinessPartnerCategoryCode:"1",
         BusinessPartnerRoleCode:"BUP001",
@@ -181,31 +181,68 @@ app.post('/createBP', (req, res) => {
           } else {
             throw new Error;
           }
-        }).catch((err) => {
-          res.status(400);
-          res.send();
         })
     } else {
-      res.status(400);
-      res.send();
+      throw new Error;
     }
+  }).catch((err) => {
+    err.status = 400;
+    next(err);
   })
 });
 
-app.post('/createTicket', (req, res) => {
+app.post('/getRegisteredProduct', (req, res, next) => {
+  let SerialID = req.body.SerialID.toUpperCase();
+  let openID = req.body.openID;
+  getUserProfile(openID, 'SocialMediaUserAccountID').then((SMUP) => {
+    if (SMUP) {
+      let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
+      let contactID = SMUP.AccountInternalID.replace(reg, "$2");
+      return contactID;
+    } else {
+      throw new Error('Please bind contact first!');
+    }
+  })
+  .then((contactID) => {
+    return getProductVerification(SerialID, '', contactID);
+  })
+  .then((data) => {
+    res.send(data)
+  })
+  .catch((err) => {
+    next(err);
+  })
+});
+
+app.post('/createTicket', (req, res, next) => {
+  let objectID;
   let ticketInfo = {
     Name: req.body.Name,
     Description: req.body.Description,
     SerialID: req.body.SerialID,
+    ProductID: req.body.ProductID,
     ServicePriorityCode: req.body.ServicePriorityCode,
     RequestedFulfillmentPeriodStartDateTime: req.body.RequestedFulfillmentPeriodStartDateTime,
     RequestedFulfillmentPeriodStarttimeZoneCode: "GMT"
   }
   let openID = req.body.openID;
   let authorName = req.body.nickName;
-  getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID').then((result) => {
-    if (result) {
-      let UUID = tools.UUIDEndoce(result);
+  getUserProfile(openID, 'SocialMediaUserAccountID').then((SMUP) => {
+    if (SMUP) {
+      let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
+      objectID = SMUP.ObjectID;
+      let contactID = SMUP.AccountInternalID.replace(reg, "$2");
+      return contactID;
+    } else {
+      throw new Error('Please bind contact first!');
+    }
+  })
+  .then((contactID) => {
+    return getProductVerification(ticketInfo.SerialID, ticketInfo.ProductID, contactID);
+  })
+  .then((isProduct) => {
+    if(isProduct) {
+      let UUID = tools.UUIDEndoce(objectID);
       let body = {
         CategoryCode: configData.codeCollection.SMACategoryCode,
         SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
@@ -217,55 +254,60 @@ app.post('/createTicket', (req, res) => {
         SocialMediaMessageAuthor: authorName
       };
       let options = getOption('POST', body, configData.apiList.SMA, true);
-      rp(options).then((data) => {
-        let ID = data.d.results.ID;
-        let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
-        let options = getOption('GET', '', queryParam);
-        options.json = true;
-        rp(options).then((data) => {
-          if (data.d.results[0]) {
-            delete ticketInfo.Description;
-            updateTicket(data.d.results[0].ParentObjectID, ticketInfo, result[0]);
-            let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
-            options.json = true;
-            rp(options).then((data) => {
-              res.send(data);
-              let id = data.d.results.ID;
-              let url = '/TicketDetail/' + id;
-              let body = {
-                openID: openID,
-                data: {
-                  ID: {
-                    value: id,
-                    color: '#173177'
-                  }
-                }
-              };
-              sendMsg(url, body, configData.templateCollection.ticketNotification);
-            })
-          }
-        }).catch((err) => {
-          res.status(400);
-          res.send();
-        })
-      }).catch((err) => {
-        res.status(400);
-        res.send(err);
-      })
+      return options;
     } else {
-      res.status(400);
-      res.send();
+      throw new Error('Not found')
     }
-  });
+  })
+  .then((options) => {
+    rp(options).then((data) => {
+      let ID = data.d.results.ID;
+      let queryParam = configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "?$filter=ID eq \'" + ID + "\'" + "and TypeCode eq \'" + configData.codeCollection.typeCode + "\'";
+      let options = getOption('GET', '', queryParam);
+      options.json = true;
+      return options;
+    })
+    .then((options) => {
+      rp(options).then((data) => {
+        if (data.d.results[0]) {
+          delete ticketInfo.Description;
+          updateTicket(data.d.results[0].ParentObjectID, ticketInfo);
+          let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
+          options.json = true;
+          return options;
+        }
+      })
+      .then((options) => {
+        rp(options).then((data) => {
+          res.send(data);
+          let id = data.d.results.ID;
+          let url = '/TicketDetail/' + id;
+          let body = {
+            openID: openID,
+            data: {
+              ID: {
+                value: id,
+                color: '#173177'
+              }
+            }
+          };
+          sendMsg(url, body, configData.templateCollection.ticketNotification);
+        })
+      })
+    })
+  }).catch((err) => {
+    err.status = 404;
+    next(err);
+  })
 });
 
-app.post('/getTicketList', (req, res) => {
+app.post('/getTicketList', (req, res, next) => {
   let key = req.body.key;
   let openID = req.body.openID;
-  getUserProfile(openID,'SocialMediaUserAccountID', 'AccountInternalID').then((id) => {
-    if(id) {
+  getUserProfile(openID,'SocialMediaUserAccountID', 'AccountInternalID').then((SMUP) => {
+    if(SMUP) {
       let reg = new RegExp("([0]*)([1-9]+[0-9]+)", "g");
-      let InternalID = id.replace(reg, "$2");
+      let InternalID = SMUP.AccountInternalID.replace(reg, "$2");
       let queryParam = configData.apiList.ServiceRequest + "?$filter=ReportedPartyID eq \'" + InternalID + "\'&$orderby=ServiceRequestUserLifeCycleStatusCode asc&$top=10&$skip=" + key;
       let options = getOption('GET', '', queryParam, false);
       rp(options).then((data) => {
@@ -295,9 +337,10 @@ app.post('/getTicketList', (req, res) => {
         // res.send(list)
       })
     } else {
-      res.status(400);
-      res.send('no data');
+      throw new Error;
     }
+  }).catch((err) => {
+    next(err);
   })
 });
 
@@ -358,21 +401,21 @@ app.post('/getInteractionHistory', (req, res) => {
   }
 })
 
-app.post('/replyMsg', (req, res) => {
+app.post('/replyMsg', (req, res, next) => {
   if (req.body.msg) {
     let openID = req.body.openID;
     let authorName = req.body.nickName;
     let queryParam = configData.apiList.SMA + "?$filter=ID eq \'" + req.body.ID + "\'";
     let options = getOption('GET', '', queryParam, true);
-    let SMUPObjectID = getUserProfile(openID, 'SocialMediaUserAccountID', 'ObjectID');
+    let SMUP = getUserProfile(openID, 'SocialMediaUserAccountID');
     let RootSMAUUID = new Promise((res, rej) => {
       rp(options).then((data) => {
         res(data.d.results[0].RootSocialMediaActivityUUID);
       })
     });
-    Promise.all([RootSMAUUID, SMUPObjectID]).then((data) => {
+    Promise.all([RootSMAUUID, SMUP]).then((data) => {
       if (data[0] && data[1]) {
-        let UUID = tools.UUIDEndoce(data[1])
+        let UUID = tools.UUIDEndoce(data[1].ObjectID)
         let body = {
           CategoryCode: configData.codeCollection.ResponseCategoryCode,
           SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
@@ -390,19 +433,17 @@ app.post('/replyMsg', (req, res) => {
           if (data.d.results.ObjectID) {
             res.send();
           } else {
-            res.status(400);
-            res.send()
+            throw new Error
           }
-        }).catch((err) => {
-          res.status(400);
-          res.send();
-        });
+        })
       }
+    }).catch((err) => {
+      next(err)
     })
   }
 })
 
-app.post('/wechat/c4c/reply', (req, res) => {
+app.post('/wechat/c4c/reply', (req, res, next) => {
   let reply = JSON.parse(req.body.content);
   let ticketID = reply.service_req_no;
   let replyMsg = {
@@ -428,9 +469,9 @@ app.post('/wechat/c4c/reply', (req, res) => {
   rp(options).then((data) => {
     if (data.d.results[0]) {
       let contactID = data.d.results[0].BuyerMainContactPartyID;
-      getUserProfile(contactID,"BusinessPartnerInternalID","ObjectID").then((objectID)=> {
-        if(objectID) {
-          let queryParam = configData.apiList.SMUP + "(\'" + objectID + "\')/SocialMediaUserProfileUserInformation";
+      getUserProfile(contactID,"BusinessPartnerInternalID").then((SMUP)=> {
+        if(SMUP) {
+          let queryParam = configData.apiList.SMUP + "(\'" + SMUP.ObjectID + "\')/SocialMediaUserProfileUserInformation";
           let options = getOption('GET', '', queryParam, false);
           rp(options).then((data) => {
             if (data.d.results[0]) {
@@ -453,8 +494,7 @@ app.post('/wechat/c4c/reply', (req, res) => {
       throw new Error;
     }
   }).catch((err) => {
-    res.status(400);
-    res.send();
+    next(err);
   })
 })
 
@@ -471,8 +511,7 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  res.status(err.status || 500).send(err.message);
 });
 
 app.listen(process.env.PORT || 4000, () => {

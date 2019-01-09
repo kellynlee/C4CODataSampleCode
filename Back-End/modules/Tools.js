@@ -7,7 +7,7 @@ const UUIDEndoce = function (ID) {
 const DateFormatter = function (date) {
     let dateObj = new Date(date);
     let year = dateObj.getFullYear();
-    let month = dateObj.getMonth() < 10? '0' + dateObj.getMonth():dateObj.getMonth();
+    let month = dateObj.getMonth() < 10? '0' + (dateObj.getMonth()+1):(dateObj.getMonth()+1);
     let day = dateObj.getDate() < 10? '0' + dateObj.getDate():dateObj.getDate();
     if (dateObj.getHours() <= 12) {
         if(dateObj.getHours() < 10) {
@@ -26,7 +26,7 @@ const DateFormatter = function (date) {
     }
     let min = dateObj.getMinutes() < 10? '0' + dateObj.getMinutes():dateObj.getMinutes();
     // let sec = dateObj.getSeconds() < 10? '0' + date.getSeconds():dateObj.getSeconds();
-    let formattedDate = (month+1) + '/' + day + '/' + year + ' ' + hour + ':' + min + flag;
+    let formattedDate = month + '/' + day + '/' + year + ' ' + hour + ':' + min + flag;
     return formattedDate;
 }
 

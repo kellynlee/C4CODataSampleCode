@@ -1,4 +1,4 @@
-module.exports = function (ID, data, token) {
+module.exports = function (ID, data) {
     const rp = require('../requestPromise');
     const configData = require('../../config/server.config');
     const getOption = require('./createOptionData');

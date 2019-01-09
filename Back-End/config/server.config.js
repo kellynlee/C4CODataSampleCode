@@ -12,6 +12,8 @@ const apiList = {
     ServiceRequest: 'ServiceRequestCollection',
     ServiceRequestLocation: 'ServiceRequestServicePointLocationCollection',
     SocialMediaActivityInteractionHistory: 'GetAllChildSocialMediaActivity',
+    RegisteredProduct: 'RegisteredProductCollection',
+    NormalProduct: 'ProductCollection'
 };
 const authorization = {
     Username: "Administration01",
