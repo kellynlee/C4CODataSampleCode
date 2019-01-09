@@ -7,9 +7,9 @@
             <mu-form-item label="*Problem Description" prop="description" :rules="DescriptionValidate">
                 <mu-text-field v-model="form.description"></mu-text-field>
             </mu-form-item>
-            <mu-form-item label="SerialID" prop="serialID" :rules="SerialIDValidate">
+            <mu-form-item label="SerialID" prop="serialID" ref="serialID" :rules="SerialIDValidate">
                 <mu-text-field v-model="form.serialID" style="width: 80%"></mu-text-field>
-                <mu-button color="primary" v-loading="isClick" data-mu-loading-size="24" overlayColor="rgba(0,0,0,.87)" :ripple = "false" :flat = "true" small @click="registeredProductCompletion" style="min-width:20%; margin-right:0; margin-left:0">
+                <mu-button color="primary" v-loading="isClick" data-mu-loading-size="24" data-mu-loading-overlay-color="hsla(0,0%,98%,.9)" :ripple = "false" :flat = "true" small @click="registeredProductCompletion" style="min-width:20%; margin-right:0; margin-left:0">
                     <mu-icon value="search"></mu-icon>
                 </mu-button>
             </mu-form-item>
@@ -84,30 +84,29 @@ export default {
     },
     methods: {
         registeredProductCompletion: function() {
-            this.WXUserInfo.then((userInfo) => {
-                this.isClick = true;
-                this.$axios({
-                    url: this.CONFIG.url.getRegisteredProduct,
-                    data: {
-                        openID: userInfo.openid,
-                        SerialID: this.form.serialID,
-                    },
-                    method: 'post'
-                }).then((res) => {
-                    this.isClick = false;
-                    if(res.status == 200) {
-                        this.form.productID = res.data;
-                    }
-                }).catch((err) => {
-                    this.isClick = false
-                    this.$alert(err.response.data);
-                    // if (isPrd) {
-                    //     wx.ready(() => {
-                    //         wx.closeWindow();
-                    //     })
-                    // }
+            if (!this.$refs.serialID.validate() || this.form.serialID.length == 0) {
+                return false
+            } else{
+                this.WXUserInfo.then((userInfo) => {
+                    this.isClick = true;
+                    this.$axios({
+                        url: this.CONFIG.url.getRegisteredProduct,
+                        data: {
+                            openID: userInfo.openid,
+                            SerialID: this.form.serialID,
+                        },
+                        method: 'post'
+                    }).then((res) => {
+                        this.isClick = false;
+                        if(res.status == 200) {
+                            this.form.productID = res.data;
+                        }
+                    }).catch((err) => {
+                        this.isClick = false
+                        this.$alert(err.response.data);
+                    })
                 })
-            })
+            }
         },
         submitTicket: function() {
             let thiz = this;
