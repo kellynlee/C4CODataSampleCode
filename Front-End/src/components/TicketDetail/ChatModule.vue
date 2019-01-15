@@ -71,8 +71,7 @@
     background: #4caf50;
     text-align: left;
     /* line-height: 1px; */
-    display: inline-block;
-    right: 0;
+    float: right;
 }
 .inBound:before{
     position: absolute;
