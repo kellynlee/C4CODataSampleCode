@@ -160,7 +160,7 @@ app.post('/getContactCollection',(req, res, next) => {
               BusinessPartnerRoleCode:configData.codeCollection.roleCode,
               BusinessPartnerUUID:UUID
             };
-            createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.SocialMediaChannelCode,
+            createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.wxChannelCode,
               configData.codeCollection.providerID, req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
                 if (data.ObjectID) {
                   data.isCreated = true;
@@ -190,7 +190,7 @@ app.post('/createBP', (req, res, next) => {
         BusinessPartnerRoleCode:"BUP001",
         BusinessPartnerUUID:req.body.UUID
       };
-      createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.SocialMediaChannelCode,
+      createSMUPwithBP(configData.codeCollection.SMUPCategoryCode,configData.codeCollection.wxChannelCode,
         req.body.openID, req.body.nickName, req.body.headImageUrl, BPNode, configData.apiList.SMUP).then((data) => {
           if (data.ObjectID) {
             data.isCreated = true;

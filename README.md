@@ -80,7 +80,7 @@ In this case, there are 3 key OData Services are used:
 {
 	"SocialMediaUserCategoryCode":"02",
 	"SocialMediaUserProfileUserInformation":[{
-		"SocialMediaChannelCode":"001",
+		"SocialMediaChannelCode":"008",
 		"ExternalPartyAccountID": Channel ID(in previous step created),
 		"SocialMediaUserAccountID":WeChat OpenID,
 		"SocialMediaUserName":WeChat Nickname
