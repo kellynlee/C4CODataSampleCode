@@ -237,9 +237,9 @@ app.post('/getRegisteredProduct', (req, res, next) => {
 });
 
 /******************************************************************************************
- * This function is to handle request to get registeres product's ProductID via Serial ID *
- * Request: OpenID, SerialID                                                              *
- * Response: ProductID                                                                    *
+ * This function is to handle request to create SMA with ticket and send successful msg   *
+ * Request: OpenID, Tickt Information                                                     *
+ * Response: Success msg                                                                  *
  * ****************************************************************************************/
 app.post('/createTicket', (req, res, next) => {
   let objectID;
@@ -318,7 +318,7 @@ app.post('/createTicket', (req, res, next) => {
               }
             }
           };
-          sendMsg(url, body, configData.templateCollection.ticketNotification);
+          sendMsg(url, body, configData.templateCollection.ticketNotification, 'templateMsg');
         })
       })
     })
@@ -328,6 +328,11 @@ app.post('/createTicket', (req, res, next) => {
   })
 });
 
+/******************************************************************************************
+ * This function is to handle request get ticket list                                     *
+ * Request: OpenID                                                                        *
+ * Response: Ticket List Array                                                            *
+ * ****************************************************************************************/
 app.post('/getTicketList', (req, res, next) => {
   let key = req.body.key;
   let openID = req.body.openID;
@@ -371,6 +376,11 @@ app.post('/getTicketList', (req, res, next) => {
   })
 });
 
+/******************************************************************************************
+ * This function is to handle request to get single ticket's detail                       *
+ * Request: OpenID, Tickt ID                                                              *
+ * Response: Ticket Detail                                                                *
+ * ****************************************************************************************/
 app.post('/getTicket',(req, res) => {
   if (req.body.ID) {
     let SocialMediaActivity = getSocialMediaActivity(req.body.ID);
@@ -407,6 +417,11 @@ app.post('/getTicket',(req, res) => {
   }
 });
 
+/************************************************************************************************
+ * This function is to handle request to get all Social Interactions associated with the ticket *
+ * Request: OpenID, Tickt ID                                                                    *
+ * Response: Social Interaction Array                                                           *
+ * **********************************************************************************************/
 app.post('/getInteractionHistory', (req, res) => {
   let nodeID = req.body.ObjectID;
   if (nodeID) {
@@ -428,6 +443,11 @@ app.post('/getInteractionHistory', (req, res) => {
   }
 })
 
+/******************************************************************************************
+ * This function is to handle request to send msg to c4c                                  *
+ * Request: OpenID, WeChat's nickname, message                                            *
+ * Response: success msg                                                                  *
+ * ****************************************************************************************/
 app.post('/replyMsg', (req, res, next) => {
   if (req.body.msg) {
     let openID = req.body.openID;
@@ -452,7 +472,7 @@ app.post('/replyMsg', (req, res, next) => {
           Text: req.body.msg,
           SocialMediaUserProfileUUID: UUID,
           SocialMediaActivityProviderID: configData.codeCollection.providerID,
-          SocialMediaMessageAuthor: req.body.nickName
+          SocialMediaMessageAuthor: authorName
         };
         let queryParam = configData.apiList.SMA;
         let options = getOption('POST', body, queryParam, true);
@@ -470,61 +490,111 @@ app.post('/replyMsg', (req, res, next) => {
   }
 })
 
-app.post('/wechat/c4c/reply', (req, res, next) => {
-  let reply = JSON.parse(req.body.content);
-  let ticketID = reply.service_req_no;
-  let replyMsg = {
-    data: {
-      Text: {
-        value: reply.text,
-        color: '#173177'
+
+/******************************************************************************************
+ * This function is to handle request from c4c mashup service                             *
+ * Case 1: Send Survey to WeChat                                                          *
+ * Case 2: Send ticket reply to WeChat                                                    *
+ * ****************************************************************************************/
+app.post('/wechat/c4c', (req, res, next) => {
+  // let requestData = JSON.parse(req.body.content);
+  let requestData = req.body;
+  if (requestData.type == 'WKF') { //Survey Message Handle Case
+    let reg = /#SURVEY\S*?#/;
+    let requestData = req.body;
+    let replyMsg = {
+      data: '',
+      openID: ''
+    }
+    let surveyData = requestData.data;
+    if (surveyData.length > 0) {
+      surveyData.forEach((elem) => {
+        let fullText = elem.fullText;
+        let surveyLink = "<a href=\'" + elem.surveyLink + "\'>Survey</a>";
+        replyMsg.openID = elem.openId;
+        let isSurvey = fullText.match(reg);
+        if (isSurvey) {
+          replyMsg.data = fullText.replace(reg, surveyLink)
+        }
+        sendMsg('', replyMsg, '', 'textMsg');
+      })
+    }
+  } else {  //Ticket Reply Handle Case
+    let reply = requestData;
+    let ticketID = reply.service_req_no;
+    let replyMsg = {
+      data: {
+        Text: {
+          value: reply.text,
+          color: '#173177'
+        },
+        ID: {
+          value: reply.service_req_no,
+          color: '#173177'
+        },
+        Author: {
+          value: reply.author_name,
+          color: '#173177'
+        }
       },
-      ID: {
-        value: reply.service_req_no,
-        color: '#173177'
-      },
-      Author: {
-        value: reply.author_name,
-        color: '#173177'
+      openID: ''
+    }
+    let url = configData.host + '/TicketDetail/' + reply.service_req_no;
+    let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + ticketID + "\'";
+    let options = getOption('GET', '', queryParam, false);
+    rp(options).then((data) => {
+      if (data.d.results[0]) {
+        let contactID = data.d.results[0].BuyerMainContactPartyID;
+        let queryParam = "GetSocialMediaUserProfile?BusinessPartnerInternalID=" + "\'" + contactID + "\'&ExternalPartyAccountID=" + "\'" + configData.codeCollection.providerID + "\'";
+        let options = getOption('GET', '', queryParam, false);
+        return rp(options);
+      } else {
+        throw new Error;
       }
-    },
-    openID: ''
-  }
-  let url = '/TicketDetail/' + reply.service_req_no;
-  let queryParam = configData.apiList.ServiceRequest + "?$filter=ID eq \'" + ticketID + "\'";
-  let options = getOption('GET', '', queryParam, false);
-  rp(options).then((data) => {
-    if (data.d.results[0]) {
-      let contactID = data.d.results[0].BuyerMainContactPartyID;
-      getUserProfile(contactID,"BusinessPartnerInternalID").then((SMUP)=> {
-        if(SMUP) {
+    })
+    .then((data)=> {
+      if(data.d.results[0]) {
+        let SMUPArr = data.d.results;
+        let SMUPSubNodes = [];
+        SMUPArr.forEach((SMUP) => {
           let queryParam = configData.apiList.SMUP + "(\'" + SMUP.ObjectID + "\')/SocialMediaUserProfileUserInformation";
           let options = getOption('GET', '', queryParam, false);
-          rp(options).then((data) => {
-            if (data.d.results[0]) {
-              let openID = data.d.results[0].SocialMediaUserAccountID;
-              if (openID) {
-                replyMsg.openID = openID;
-                sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification);
-                res.status(200);
-                res.send();
-              }
-            } else {
-              throw new Error;
+          SMUPSubNodes.push(rp(options));
+        });
+        return Promise.all(SMUPSubNodes);
+      } else {
+        throw new Error;
+      }
+    })
+    .then((data) => {
+      if (data.length > 0) {
+        let errStack = 0;
+        data.forEach((elem) => {
+          if (elem.d.results[0]) {
+            let infoNode = elem.d.results[0];
+            let openID = infoNode.SocialMediaUserAccountID;
+            if (openID) {
+              replyMsg.openID = openID;
+              sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification, 'templateMsg');
             }
-          })
+          } else {
+            errStack++;
+          }
+        });
+        if (errStack == 0) {
+          res.status(200);
+          res.send();
         } else {
           throw new Error;
         }
-      })
-    } else {
-      throw new Error;
-    }
-  }).catch((err) => {
-    next(err);
-  })
-})
-
+      } else {
+        throw new Error;
+      }
+    }).catch((err) => {
+      next(err);
+    })
+  }
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -36,7 +36,8 @@ const codeCollection = {
 
 const templateCollection = {
     ticketNotification: '3fTc7rji2UNiCeSSmJS-8bQ2omaScofgYId4hYNKnek',
-    socialInteractionNotification:'QEjMkLAwQ9ul9qUZ8LmXllp51_dzyLRJXzTzq8D9d6U'
+    socialInteractionNotification:'QEjMkLAwQ9ul9qUZ8LmXllp51_dzyLRJXzTzq8D9d6U',
+    surveyNotification: 'Zs6DFiToLOErd9_tMn2zETXU7nDVPV9KLX-E2mBCvS8'
 }
 
 

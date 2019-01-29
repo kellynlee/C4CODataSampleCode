@@ -49,23 +49,23 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
 ### 3. Configure in C4C
 - Create Mashup Service
 Mashup Service is used to interact with the Agent Server, for example, sending message to Agent Server when Administrator replies a ticket.
-    > 1 . Navigate to Administrator Service
-    > 2 . Click Business Flexibility->Mashup Web Services
-    > 3 . Click New->REST Service
-    > 4 . Enter Service Name, Select 'POST' as HTTP Method,'Form' as Content Type.
-    > 5 . Enter URL(`<Your cloud server address> + API`, E.g. https://xxxxxxxxxx.com/wechat/c4c/reply)
-    > 6 . Save your options.
+    1. Navigate to Administrator Service
+    2. Click Business Flexibility->Mashup Web Services
+    3. Click New->REST Service
+    4. Enter Service Name, Select 'POST' as HTTP Method,'Form' as Content Type.
+    5. Enter URL(`<Your cloud server address> + API`, E.g. https://xxxxxxxxxx.com/wechat/c4c/reply)
+    6. Save your options.
 - Create New Channel with type "WeChat"
 This channel is the representation of related official account in C4C.
 Please follow the steps below:
-    > 1 . Navigate to Administrator Service and Social Settings Social Media Channels.
-    > 2 . Click New.
-    > 3 . Select WeChat as the  Social Media Channel.
-    > 4 . Enter the Mashup Service ID that you have created for the response.(Please enter the ID, do not copy and paste)
-    > 5 . Enter your Channel ID and Channel Name.
-    > 6 . Save your options.
+    1. Navigate to Administrator Service and Social Settings Social Media Channels.
+    2. Click New.
+    3. Select WeChat as the  Social Media Channel.
+    4. Enter the Mashup Service ID that you have created for the response.(Please enter the ID, do not copy and paste)
+    5. Enter your Channel ID and Channel Name.
+    6. Save your options.
 ### 4. Implementation
-To build the intermediary server, let's take SCP for example. First, regarding how to build a node server in SCP, follow this help document. The followings explain the main logic which should be implemented in node server.
+To build the intermediary server, let's take SCP for example. First, regarding how to build a node server in SCP, follow this [help document](https://cloudplatform.sap.com/try.html). The followings explain the main logic which should be implemented in node server.
 #### 4.1 Key OData Service Introduction
 We provide standard OData service in C4C which contains several entities: *https://<host_url>/sap/c4c/odata/v1/c4codataapi*
 
