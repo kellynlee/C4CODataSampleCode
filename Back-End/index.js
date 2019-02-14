@@ -101,7 +101,7 @@ app.post('/getOpenID', (req, res) => {
      * **********************************************************************************/
     console.log('local');
     res.send({
-      openid: '1235',
+      openid: 'oKCV91TySfSQGar2avVhBYEIvC5w',
       nickname: 'testMan',
       headimgurl: 'aaa.jpg'
     });
@@ -275,6 +275,7 @@ app.post('/createTicket', (req, res, next) => {
         SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
         SocialMediaMessageID: new Date().valueOf().toString(),
         InitiatorCode: configData.codeCollection.InitiatorCode,
+        // PrivateSocialMediaMessageIndicator: true,
         SocialMediaUserProfileUUID: UUID,
         Text: req.body.Description,
         SocialMediaActivityProviderID: configData.codeCollection.providerID,
@@ -302,6 +303,8 @@ app.post('/createTicket', (req, res, next) => {
           let options = getOption('GET', '',configData.apiList.ServiceRequestBusinessTransactionDocumentReference + "(\'" + data.d.results[0].ObjectID + "\')/ServiceRequest", false);
           options.json = true;
           return options;
+        } else {
+          throw new Error;
         }
       })
       .then((options) => {
@@ -318,7 +321,9 @@ app.post('/createTicket', (req, res, next) => {
               }
             }
           };
-          sendMsg(url, body, configData.templateCollection.ticketNotification, 'templateMsg');
+          getWxToken().then((access_token) => {
+            sendMsg(access_token, url, body, configData.templateCollection.ticketNotification, 'templateMsg');
+          })
         })
       })
     })
@@ -471,6 +476,7 @@ app.post('/replyMsg', (req, res, next) => {
           ParentSocialMediaActivityUUID: data[0],
           Text: req.body.msg,
           SocialMediaUserProfileUUID: UUID,
+          // PrivateSocialMediaMessageIndicator: true,
           SocialMediaActivityProviderID: configData.codeCollection.providerID,
           SocialMediaMessageAuthor: authorName
         };
@@ -497,28 +503,43 @@ app.post('/replyMsg', (req, res, next) => {
  * Case 2: Send ticket reply to WeChat                                                    *
  * ****************************************************************************************/
 app.post('/wechat/c4c', (req, res, next) => {
-  // let requestData = JSON.parse(req.body.content);
-  let requestData = req.body;
+  console.log(req.body);
+  let requestData;
+  if (req.body.content) {
+    if (JSON.parse(req.body.content)) {
+      requestData = JSON.parse(req.body.content);
+    }
+  } else {
+    requestData = req.body;
+  }
   if (requestData.type == 'WKF') { //Survey Message Handle Case
-    let reg = /#SURVEY\S*?#/;
-    let requestData = req.body;
+    let reg = /#SURVEY[\s\S]*#/;
     let replyMsg = {
       data: '',
       openID: ''
     }
     let surveyData = requestData.data;
     if (surveyData.length > 0) {
-      surveyData.forEach((elem) => {
-        let fullText = elem.fullText;
-        let surveyLink = "<a href=\'" + elem.surveyLink + "\'>Survey</a>";
-        replyMsg.openID = elem.openId;
-        let isSurvey = fullText.match(reg);
-        if (isSurvey) {
-          replyMsg.data = fullText.replace(reg, surveyLink)
-        }
-        sendMsg('', replyMsg, '', 'textMsg');
-      })
+      getWxToken().then((access_token) => {
+        surveyData.forEach((elem) => {
+          let fullText = elem.fullText;
+          let surveyLink = "<a href=\'" + elem.surveyLink + "\'>Survey</a>";
+          replyMsg.openID = elem.openId;
+          if (elem.surveyLink.length > 0) {
+          let isSurvey = fullText.match(reg);
+            if (isSurvey) {
+              replyMsg.data = fullText.replace(reg, surveyLink);
+            } else {
+              replyMsg.data = fullText;
+            }
+          } else {
+            replyMsg.data = fullText;
+          }
+            sendMsg(access_token, '', replyMsg, '', 'textMsg');
+        });
+      });
     }
+    res.send();
   } else {  //Ticket Reply Handle Case
     let reply = requestData;
     let ticketID = reply.service_req_no;
@@ -575,7 +596,9 @@ app.post('/wechat/c4c', (req, res, next) => {
             let openID = infoNode.SocialMediaUserAccountID;
             if (openID) {
               replyMsg.openID = openID;
-              sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification, 'templateMsg');
+              getWxToken().then((access_token) => {
+                sendMsg(access_token, url, replyMsg, configData.templateCollection.socialInteractionNotification, 'templateMsg');
+              })
             }
           } else {
             errStack++;

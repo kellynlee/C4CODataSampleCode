@@ -8,21 +8,21 @@ const getToken = function (access_token) {
     })
   })
 };
-setInterval(getToken,5400000);
+setInterval(getToken,7100000);
 
 module.exports = function (access_token) {
   return new Promise((res, rej) => {
     if (new Date().valueOf() > tokenStore.JSSDK["expire"]) {
-      console.log(tokenStore.JSSDK)
+      console.log('JSSDK Token refreshed in ' + new Date());
       getToken(access_token).then((data) => {
           if (data["ticket"]) {
               tokenStore.JSSDK['token'] = data["ticket"];
-              tokenStore.JSSDK["expire"] = new Date().valueOf() + 7200000;
+              tokenStore.JSSDK["expire"] = new Date().valueOf() + 7100000;
               res(tokenStore.JSSDK);
           }
       })
     } else {
-        console.log('not expired')
+        console.log(new Date() + ' , JSSDK Token is not expired')
         res(tokenStore.JSSDK);
     }
   })

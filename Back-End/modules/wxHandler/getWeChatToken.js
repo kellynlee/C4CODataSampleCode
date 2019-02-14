@@ -8,13 +8,13 @@ const getToken = function () {
         methods: 'get'
     }
     return new Promise ((res, req) => {
-        console.log('get token');
+        console.log('Token refreshed in ' + new Date());
         rp(options).then((data) => {
             res(JSON.parse(data))
         })
     })
 };
-setInterval(getToken,7200000);
+setInterval(getToken,7100000);
 
 module.exports = function () {
     return new Promise((res, rej) => {
@@ -23,12 +23,12 @@ module.exports = function () {
             getToken().then((data) => {
                 if (data["access_token"]) {
                     tokenStore.wxToken["access_token"] = data["access_token"];
-                    tokenStore.wxToken["expire"] = new Date().valueOf() + 7200000;
+                    tokenStore.wxToken["expire"] = new Date().valueOf() + 7100000;
                     res(tokenStore.wxToken["access_token"]);
                 }
             })
         } else {
-            console.log('not expired')
+            console.log(new Date() + ' ,Token is not expired')
             res(tokenStore.wxToken["access_token"]);
         }
     })
