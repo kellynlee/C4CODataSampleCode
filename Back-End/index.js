@@ -311,7 +311,7 @@ app.post('/createTicket', (req, res, next) => {
         rp(options).then((data) => {
           res.send(data);
           let id = data.d.results.ID;
-          let url = '/TicketDetail/' + id;
+          let url =configData.host + '/TicketDetail/' + id;
           let body = {
             openID: openID,
             data: {
@@ -321,9 +321,7 @@ app.post('/createTicket', (req, res, next) => {
               }
             }
           };
-          getWxToken().then((access_token) => {
-            sendMsg(access_token, url, body, configData.templateCollection.ticketNotification, 'templateMsg');
-          })
+          sendMsg(url, body, configData.templateCollection.ticketNotification, 'templateMsg');
         })
       })
     })
@@ -514,14 +512,14 @@ app.post('/wechat/c4c', (req, res, next) => {
   }
   if (requestData.type == 'WKF') { //Survey Message Handle Case
     let reg = /#SURVEY[\s\S]*#/;
-    let replyMsg = {
-      data: '',
-      openID: ''
-    }
     let surveyData = requestData.data;
     if (surveyData.length > 0) {
-      getWxToken().then((access_token) => {
+      // getWxToken().then((access_token) => {
         surveyData.forEach((elem) => {
+          let replyMsg = {
+            data: '',
+            openID: ''
+          }
           let fullText = elem.fullText;
           let surveyLink = "<a href=\'" + elem.surveyLink + "\'>Survey</a>";
           replyMsg.openID = elem.openId;
@@ -535,9 +533,9 @@ app.post('/wechat/c4c', (req, res, next) => {
           } else {
             replyMsg.data = fullText;
           }
-            sendMsg(access_token, '', replyMsg, '', 'textMsg');
+            sendMsg('', replyMsg, '', 'textMsg');
         });
-      });
+      // });
     }
     res.send();
   } else {  //Ticket Reply Handle Case
@@ -596,9 +594,7 @@ app.post('/wechat/c4c', (req, res, next) => {
             let openID = infoNode.SocialMediaUserAccountID;
             if (openID) {
               replyMsg.openID = openID;
-              getWxToken().then((access_token) => {
-                sendMsg(access_token, url, replyMsg, configData.templateCollection.socialInteractionNotification, 'templateMsg');
-              })
+              sendMsg(url, replyMsg, configData.templateCollection.socialInteractionNotification, 'templateMsg');
             }
           } else {
             errStack++;

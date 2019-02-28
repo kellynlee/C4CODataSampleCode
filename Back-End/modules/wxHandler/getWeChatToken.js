@@ -8,7 +8,7 @@ const getToken = function () {
         methods: 'get'
     }
     return new Promise ((res, req) => {
-        console.log('Token refreshed in ' + new Date());
+        console.log('access_token refreshed in ' + new Date());
         rp(options).then((data) => {
             res(JSON.parse(data))
         })
@@ -28,7 +28,7 @@ module.exports = function () {
                 }
             })
         } else {
-            console.log(new Date() + ' ,Token is not expired')
+            console.log(new Date() + ' ,access_token is not expired')
             res(tokenStore.wxToken["access_token"]);
         }
     })

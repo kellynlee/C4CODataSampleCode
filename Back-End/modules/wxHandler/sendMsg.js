@@ -1,9 +1,9 @@
 const rp = require('request-promise');
 const wxConfig = require('../../config/wechatConfig');
 const getAccessToken = require('./getWeChatToken');
-module.exports = function (access_token, url, data, templateID, msgType) {
+module.exports = function (url, data, templateID, msgType) {
     console.log('send msg');
-    // getAccessToken().then((access_token) => {
+    getAccessToken().then((access_token) => {
         switch(msgType) {
             case 'templateMsg': {
                 rp({
@@ -40,5 +40,5 @@ module.exports = function (access_token, url, data, templateID, msgType) {
             }
             break;
         }
-    // })
+    })
 }
