@@ -11,10 +11,11 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
     - SocialMediaUserProfile (SMUP) is created via WeChat openID
     - SMUP is associated with contact as BusinessPartner (BP), which means, the contact is stored as sub-node 'SocialMediaUserProfileBupaReference' in the root-node 'SocialMediaUserProfile'
 - Create and the ticket via WeChat, which means:
-    - SociaMediaActivity (SMA) is created 
+    - SociaMediaActivity (SMA) is created.
 - Check the ticket list and the ticket detail.
 - Check Social Interaction about the ticket.
--Send and receive messages about the ticket via WeChat.
+- Send and receive messages about the ticket via WeChat.
+- Revieve survey message and link from C4C.
 
 ## Prerequisites
 
@@ -41,6 +42,8 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
     - The message will be pushed to Agent Server and then be forwarded to the user. Agent Server will use SMA ID to get the associated ticket, and then use the 'BuyerMainContactPartyID' property as contact ID to query SMUP and then send message to the SMUP.(This process is to prevent if ticket changes contact person, which means after changing, the new SMUP will recieve the notification about the ticket instead of the old one).
 5.	Users enter Ticket Detail Page and click 'InteractionLog' tab.
     - Agent Server will get all child SocialMediaActivity bounded in the root SocialMediaActivity and respond to WeChat.
+6. If there is survet workflow rules relates to the ticket, once the rule has excuted.
+    - Agent Server will revcieve the formatted JSON data and send a text notification includes survey message and survey link to user.
 
 ### 2. Development List
 - Development of Agent Server
@@ -53,7 +56,7 @@ Mashup Service is used to interact with the Agent Server, for example, sending m
     2. Click Business Flexibility->Mashup Web Services
     3. Click New->REST Service
     4. Enter Service Name, Select 'POST' as HTTP Method,'Form' as Content Type.
-    5. Enter URL(`<Your cloud server address> + API`, E.g. https://xxxxxxxxxx.com/wechat/c4c/reply)
+    5. Enter URL(`<Your cloud server address> + API`, E.g. https://xxxxxxxxxx.com/wechat/c4c)
     6. Save your options.
 - Create New Channel with type "WeChat"
 This channel is the representation of related official account in C4C.
@@ -152,8 +155,41 @@ The parameters received by Agent Server are as below: `token/timestamp/nonce/sig
 - Generate the customized user menu in official account
 Call the API of WeChat official account with POST mode ( use https as protocol)
 `https://api.weixin.qq.com/cgi-bin/menu/create?access_token=ACCESS_TOKEN`
-`ACCESS_TOKEN`is the token stored in server in previous steps. 
+`ACCESS_TOKEN`is the token stored in server in previous steps.
 For details, please refer to[WeChat Official Account Development Guide](https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1445241432)
+
+#### 4.3 C4C Mashup Web Service Handle
+The mashup service is needed for both sending ticket reply and survey message to WeChat Agent Server.
+- For survey workflow, the JSON data sending from mashup service is like:
+```JSON
+{
+    "type":"WKF",
+    "data":[{
+        "openId":"WeChat OpenID",
+        "fullText":"THIE IS SURVEY LINK #SURVEY2041#. PLEASE FILL THE FORM.",
+        "surveyLink":"https://surveylink"
+        }]
+}
+```
+By using the flag 'WKF' to identify the message type is survey message. The survey's link is filled in `surveyLink`(It is optional, wether the hyperlink is filled will depend on user's configure in C4C System). For detail, please refer to the wiki page:[WeChat Integration with C4C Workflow](https://wiki.wdf.sap.corp/wiki/display/C4CCNCTU/WeChat+Integration+with+C4C+Workflow).
+- For C4C ticket reply to WeChat, the JSON data is like:
+```JSON
+{
+    "content": 
+        '{
+            "original_id":"",
+            "sma_id":"message id",
+            "service_req_no":"ticket id",
+            "author_name":"author name",
+            "author_email":"",
+            "sma_create_datetime":"2019-03-04T03:31:27Z",
+            "private_ind":"FALSE",
+            "text":"text"
+            }'
+}
+```
+For the ticket reply, we will use ticket ID to get the `BuyerMainContactPartyID`, which is the contact you linked with your SMUP, and use the `BuyerMainContactPartyID` as `BusinessPartnerInternalID` to get SMUP'S `SocialMediaUserAccountID`, this is the user the message will send.
+
 ## Project Description
 
 This project contains two parts, Front-End(H5 Page) and Back-End(Agent Server).
