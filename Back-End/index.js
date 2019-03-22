@@ -275,7 +275,7 @@ app.post('/createTicket', (req, res, next) => {
         SocialMediaChannelCode:configData.codeCollection.wxChannelCode,
         SocialMediaMessageID: new Date().valueOf().toString(),
         InitiatorCode: configData.codeCollection.InitiatorCode,
-        // PrivateSocialMediaMessageIndicator: true,
+        PrivateSocialMediaMessageIndicator: true,
         SocialMediaUserProfileUUID: UUID,
         Text: req.body.Description,
         SocialMediaActivityProviderID: configData.codeCollection.providerID,
@@ -474,7 +474,7 @@ app.post('/replyMsg', (req, res, next) => {
           ParentSocialMediaActivityUUID: data[0],
           Text: req.body.msg,
           SocialMediaUserProfileUUID: UUID,
-          // PrivateSocialMediaMessageIndicator: true,
+          PrivateSocialMediaMessageIndicator: true,
           SocialMediaActivityProviderID: configData.codeCollection.providerID,
           SocialMediaMessageAuthor: authorName
         };
