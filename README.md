@@ -29,6 +29,7 @@ The C4C Agent Server Accelerator project implemented 5 functions to complete the
     - C4C admin user
 - Register a WeChat Official Account with Subscription Account type from WeChat Open Platform.
 - The related API should have been provided by C4C.
+- In order to successfully call the SMUP OData service, the integration user shall have the read access to Flexibility Change Log work center view
 ## Integration Process
 
 ### 1. Process Description
